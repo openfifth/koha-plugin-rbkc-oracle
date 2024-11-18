@@ -2,14 +2,14 @@ package Koha::Plugin::Com::PTFSEurope::Oracle;
 
 use Modern::Perl;
 
-use base qw{ Koha::Plugins::Base };
+use base            qw{ Koha::Plugins::Base };
 use Koha::DateUtils qw(dt_from_string);
 
 use Mojo::JSON qw{ decode_json };
 
-our $VERSION  = '0.0.1';
+our $VERSION  = '0.0.2';
 our $metadata = {
-    name            => 'Oracle Finance Integration',
+    name => 'Oracle Finance Integration',
 
     author          => 'PTFS Europe',
     date_authored   => '2024-11-15',
@@ -17,16 +17,17 @@ our $metadata = {
     minimum_version => '23.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
-    description     => 'A plugin to manage finance integration for RBKC with Oracle',
+    description     =>
+      'A plugin to manage finance integration for RBKC with Oracle',
 };
 
 sub new {
     my ( $class, $args ) = @_;
 
-    $args->{'metadata'}            = $metadata;
+    $args->{'metadata'} = $metadata;
     $args->{'metadata'}->{'class'} = $class;
 
-    my $self     = $class->SUPER::new( $args );
+    my $self = $class->SUPER::new($args);
     $self->{cgi} = CGI->new();
 
     return $self;
@@ -48,7 +49,7 @@ sub report_step1 {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
 
-    my $template = $self->get_template({ file => 'report-step1.tt' });
+    my $template = $self->get_template( { file => 'report-step1.tt' } );
     $self->output_html( $template->output() );
 }
 
@@ -56,8 +57,9 @@ sub report_step2 {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
 
-    my $dbh = C4::Context->dbh;
+    my $dbh    = C4::Context->dbh;
     my $output = $cgi->param('output');
+
 #    my $fromDay   = $cgi->param('fromDay');
 #    my $fromMonth = $cgi->param('fromMonth');
 #    my $fromYear  = $cgi->param('fromYear');
@@ -73,15 +75,30 @@ sub report_step2 {
 #        $toDate   = "$toYear-$toMonth-$toDay";
 #    }
 
-    my $invoices = Koha::Acquisition::Invoices->search({},{ prefetch => [ 'booksellerid', 'aqorders' ]});
+    my $invoices = Koha::Acquisition::Invoices->search( {},
+        { prefetch => [ 'booksellerid', 'aqorders' ] } );
 
     my $results = "";
     while ( my $invoice = $invoices->next ) {
-        my $lines = "";
-        for my $line ( $invoice->aqorders ) {
-            $lines .= "GL,".$invoice->invoicenumber.",".$line->ordernumber.",".$line->unitprice.",".$invoice->aqbooksellerid->accountnumber.",".$line->tax_rate_bak.",".$line->budgetid->budgetname."\n";
+        my $lines  = "";
+        my $orders = $invoice->_result->aqorders;
+        while ( my $line = $orders->next ) {
+            $lines .= "GL" . ","
+              . $invoice->invoicenumber . ","
+              . $line->ordernumber . ","
+              . $line->unitprice . ","
+              . $invoice->_result->booksellerid->accountnumber . ","
+              . $line->tax_rate_bak . ","
+              . $line->budget->budget_name . "\n";
         }
-        $results .= "AP,".$invoice->invoicenumber.",".$invoice->billingdate.",KC,"."TOTAL".","."TAX".",".$invoice->aqbooksellerid->fax.",".$invoice->shipmentdate.",".$invoice->booksellerid."\n";
+        $results .= "AP" . ","
+          .
+          . $invoice->invoicenumber . ","
+          . $invoice->billingdate . "," . "KC" . "," . "TOTAL" . "," . "TAX"
+          . ","
+          . $invoice->_resu lt->booksellerid->fax . ","
+          . $invoice->shipmentdate . ","
+          . $invoice->booksellerid . "\n";
         $results .= $lines;
     }
 
@@ -95,11 +112,11 @@ sub report_step2 {
         $filename = 'report-step2-html.tt';
     }
 
-    my $template = $self->get_template({ file => $filename });
+    my $template = $self->get_template( { file => $filename } );
 
     $template->param(
-        date_ran     => dt_from_string(),
-        results      => $results,
+        date_ran => dt_from_string(),
+        results  => $results,
     );
 
     print $template->output();
