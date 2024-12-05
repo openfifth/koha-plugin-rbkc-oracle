@@ -7,7 +7,7 @@ use Koha::DateUtils qw(dt_from_string);
 
 use Mojo::JSON qw{ decode_json };
 
-our $VERSION  = '0.0.2';
+our $VERSION  = '0.0.3';
 our $metadata = {
     name => 'Oracle Finance Integration',
 
@@ -79,28 +79,52 @@ sub report_step2 {
         { prefetch => [ 'booksellerid', 'aqorders' ] } );
 
     my $results = "";
+    my $invoices = 0;
+    my $overall_total = 0;
     while ( my $invoice = $invoices->next ) {
+        $invoices++;
         my $lines  = "";
         my $orders = $invoice->_result->aqorders;
+        my $total  = 0;
+
+        # Collect 'General Ledger lines'
         while ( my $line = $orders->next ) {
             $lines .= "GL" . ","
-              . $invoice->invoicenumber . ","
-              . $line->ordernumber . ","
-              . $line->unitprice . ","
               . $invoice->_result->booksellerid->accountnumber . ","
+              . ","
+              . $line->unitprice . ","
+              . ","
               . $line->tax_rate_bak . ","
-              . $line->budget->budget_name . "\n";
+              . ","
+              . ","
+              . ","
+              . "Statistical" . ","
+              . ","
+              . $line->budget->budget_name . ","
+              . $invoice->invoicenumber . ","
+              . ",,,,,,,,,," . "\n";
         }
+
+        # Add 'Accounts Payable line'
         $results .= "AP" . ","
-          .
+          . $invoice->booksellerid . ","
           . $invoice->invoicenumber . ","
-          . $invoice->billingdate . "," . "KC" . "," . "TOTAL" . "," . "TAX"
-          . ","
-          . $invoice->_resu lt->booksellerid->fax . ","
-          . $invoice->shipmentdate . ","
-          . $invoice->booksellerid . "\n";
+          . ( $invoice->billingdate =~ s/-//gr ) . ","
+          . "TOTAL" . ","
+          . "TAX" . ","
+          . $invoice->_result->booksellerid->fax . ","
+          . ( $invoice->shipmentdate =~ s/-//gr ) . ","
+          . ",,,,,,,,,,,,,," . "\n";
         $results .= $lines;
     }
+
+    # Add 'Control Total line'
+    $results = "CT" . "," 
+      . $invoices . ","
+      . $overall_total . ","
+      . ",,,,,,,,,,,,,,,,,,,," . "\n"
+      . $results;
+    
 
     my $filename;
     if ( $output eq "txt" ) {
