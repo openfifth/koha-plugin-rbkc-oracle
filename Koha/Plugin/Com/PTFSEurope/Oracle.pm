@@ -79,10 +79,10 @@ sub report_step2 {
         { prefetch => [ 'booksellerid', 'aqorders' ] } );
 
     my $results = "";
-    my $invoices = 0;
+    my $invoice_count = 0;
     my $overall_total = 0;
     while ( my $invoice = $invoices->next ) {
-        $invoices++;
+        $invoice_count++;
         my $lines  = "";
         my $orders = $invoice->_result->aqorders;
         my $total  = 0;
@@ -120,7 +120,7 @@ sub report_step2 {
 
     # Add 'Control Total line'
     $results = "CT" . "," 
-      . $invoices . ","
+      . $invoice_count . ","
       . $overall_total . ","
       . ",,,,,,,,,,,,,,,,,,,," . "\n"
       . $results;
