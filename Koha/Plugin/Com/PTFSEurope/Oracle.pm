@@ -4,6 +4,7 @@ use Modern::Perl;
 
 use base            qw{ Koha::Plugins::Base };
 use Koha::DateUtils qw(dt_from_string);
+use Koha::Number::Price;
 
 use Mojo::JSON qw{ decode_json };
 
@@ -78,7 +79,7 @@ sub report_step2 {
     my $invoices = Koha::Acquisition::Invoices->search( {},
         { prefetch => [ 'booksellerid', 'aqorders' ] } );
 
-    my $results = "";
+    my $results       = "";
     my $invoice_count = 0;
     my $overall_total = 0;
     while ( my $invoice = $invoices->next ) {
@@ -88,11 +89,14 @@ sub report_step2 {
         my $total  = 0;
 
         # Collect 'General Ledger lines'
+        my $invoice_total = 0;
         while ( my $line = $orders->next ) {
+            my $unitprice = Koha::Number::Price->new( $line->unitprice )->round * 100;
+            $invoice_total = $invoice_total + $unitprice;
             $lines .= "GL" . ","
               . $invoice->_result->booksellerid->accountnumber . ","
               . ","
-              . $line->unitprice . ","
+              . $unitprice . ","
               . ","
               . $line->tax_rate_bak . ","
               . ","
@@ -106,11 +110,13 @@ sub report_step2 {
         }
 
         # Add 'Accounts Payable line'
+        $invoice_total = $invoice_total * -1;
+        $overall_total = $overall_total + $invoice_total;
         $results .= "AP" . ","
           . $invoice->booksellerid . ","
           . $invoice->invoicenumber . ","
           . ( $invoice->billingdate =~ s/-//gr ) . ","
-          . "TOTAL" . ","
+          . $invoice_total . ","
           . "TAX" . ","
           . $invoice->_result->booksellerid->fax . ","
           . ( $invoice->shipmentdate =~ s/-//gr ) . ","
@@ -119,12 +125,12 @@ sub report_step2 {
     }
 
     # Add 'Control Total line'
-    $results = "CT" . "," 
+    $overall_total = $overall_total * -1;
+    $results = "CT" . ","
       . $invoice_count . ","
       . $overall_total . ","
       . ",,,,,,,,,,,,,,,,,,,," . "\n"
       . $results;
-    
 
     my $filename;
     if ( $output eq "txt" ) {
