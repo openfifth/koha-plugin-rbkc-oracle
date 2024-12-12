@@ -1,61 +1,76 @@
 [% INCLUDE 'doc-head-open.inc' %]
- <title>Koha: KBMC Oracle Plugin: Report</title>
+<title>[% FILTER collapse %]
+    [% t("KMBC Oracle") | html %] &rsaquo;
+    [% t("Plugins") | html %] &rsaquo;
+    [% t("Koha") | html %]
+[% END %]</title>
  <script type="text/javascript" src="[% PLUGIN_PATH %]/datepicker/js/datepicker.js"></script>
  <link href="[% PLUGIN_PATH %]/datepicker/css/datepicker.css" rel="stylesheet" type="text/css" />
 [% INCLUDE 'doc-head-close.inc' %]
 </head>
-<body>
-[% INCLUDE 'header.inc' %]
-[% INCLUDE 'cat-search.inc' %]
+<body id="plugins_kmbc_oracle" class="plugins">
+[% WRAPPER 'header.inc' %]
+    [% INCLUDE 'cat-search.inc' %]
+[% END %]
 
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; Kitchen Sink &rsaquo; Report &rsaquo; Patron List</div>
+[% WRAPPER 'sub-header.inc' %]
+    [% WRAPPER breadcrumbs %]
+        [% WRAPPER breadcrumb_item %]
+            <a href="/cgi-bin/koha/reports/reports-home.pl">Reports</a>
+        [% END %]
+        [% WRAPPER breadcrumb_item bc_active= 1 %]
+            <span>RBKC Oracle</span>
+        [% END %]
+    [% END #/ WRAPPER breadcrumbs %]
+[% END #/ WRAPPER sub-header.inc %]
 
-<div id="doc3">
-	<h3>Generate Oracle Report</h3>
-
-	<form method="get">
-        <input type="hidden" name="class" value="[% CLASS %]"/>
-        <input type="hidden" name="method" value="[% METHOD %]"/>
-
-		<label>Date From:</label>
-		<table class="split-date-wrap" border="0" cellpadding="0" cellspacing="0">
-
-			<tr>
-				<td><input size="2" id="date-from-mm" name="fromMonth" value="" maxlength="2" type="text" />/</td>
-				<td><input size="2" id="date-from-dd" name="fromDay" value="" maxlength="2" type="text" />/</td>
-				<td><input size="4" class="split-date fill-grid statusformat-l-cc-sp-d-sp-F-sp-Y show-weeks" id="date-from" name="fromYear" value="" maxlength="4" type="text" /></td>
-				<td>
-					<a tabindex="0" aria-haspopup="true" role="button" id="fd-but-date-from" title="Show Calendar" class="date-picker-control" href="#date-from">
-						<span>&nbsp;</span>
-					</a>
-
-				</td>
-			</tr>
-		</table>  
-		<br/>
-
-		<label>Date To:</label>
-		<table class="split-date-wrap" border="0" cellpadding="0" cellspacing="0">
-			<tr>
-				<td><input size="2" id="date-to-mm" name="toMonth" value="" maxlength="2" type="text" />/</td>
-					<td><input size="2" id="date-to-dd" name="toDay" value="" maxlength="2" type="text" />/</td>
-				<td><input size="4" class="split-date fill-grid statusformat-l-cc-sp-d-sp-F-sp-Y show-weeks" id="date-to" name="toYear" value="" maxlength="4" type="text" /></td>
-				<td>
-					<a tabindex="0" aria-haspopup="true" role="button" id="fd-but-date-to" title="Show Calendar" class="date-picker-control" href="#date-to">
-						<span>&nbsp;</span>
-					</a>
-				</td>
-			</tr>
-
-		</table>  
-
-		<label for="output">Output Data to:</label>
-		<select name="output">
-			<option value="screen">Display List</option>
-			<option value="txt">TXT File</option>
-		</select>
-
-		<input type="submit" value="Run Report" />
-	</form>
+<div id="main container-fluid">
+    <div class="row">
+        <div class="col-md-10 order-md-2 order-sm-1">
+            <main>
+                <h1>Generate Oracle Report</h1>
+                <form method="get">
+                    <input type="hidden" name="class" value="[% CLASS %]"/>
+                    <input type="hidden" name="method" value="[% METHOD %]"/>
+                    <label>Date From:</label>
+                    <table class="split-date-wrap" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td><input size="2" id="date-from-mm" name="fromMonth" value="" maxlength="2" type="text" />/</td>
+                            <td><input size="2" id="date-from-dd" name="fromDay" value="" maxlength="2" type="text" />/</td>
+                            <td><input size="4" class="split-date fill-grid statusformat-l-cc-sp-d-sp-F-sp-Y show-weeks" id="date-from" name="fromYear" value="" maxlength="4" type="text" /></td>
+                            <td>
+                                <a tabindex="0" aria-haspopup="true" role="button" id="fd-but-date-from" title="Show Calendar" class="date-picker-control" href="#date-from">
+                                    <span>&nbsp;</span>
+                                </a>
+                            </td>
+                        </tr>
+                    </table>  
+                    <br/>
+                    <label>Date To:</label>
+                    <table class="split-date-wrap" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td><input size="2" id="date-to-mm" name="toMonth" value="" maxlength="2" type="text" />/</td>
+                                <td><input size="2" id="date-to-dd" name="toDay" value="" maxlength="2" type="text" />/</td>
+                            <td><input size="4" class="split-date fill-grid statusformat-l-cc-sp-d-sp-F-sp-Y show-weeks" id="date-to" name="toYear" value="" maxlength="4" type="text" /></td>
+                            <td>
+                                <a tabindex="0" aria-haspopup="true" role="button" id="fd-but-date-to" title="Show Calendar" class="date-picker-control" href="#date-to">
+                                    <span>&nbsp;</span>
+                                </a>
+                            </td>
+                        </tr>
+                    </table>  
+                    <label for="output">Output Data to:</label>
+                    <select name="output">
+                        <option value="screen">Display List</option>
+                        <option value="txt">TXT File</option>
+                    </select>
+                    <input type="submit" value="Run Report" />
+                </form>
+            </main>
+        </div>
+        <div class="col-md-2 order-sm-2 order-md-1">
+            <aside></aside>
+        </div>
+    </div>
 
 [% INCLUDE 'intranet-bottom.inc' %]
