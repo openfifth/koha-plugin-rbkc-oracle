@@ -76,8 +76,10 @@ sub report_step2 {
 #        $toDate   = "$toYear-$toMonth-$toDay";
 #    }
 
-    my $invoices = Koha::Acquisition::Invoices->search( {},
-        { prefetch => [ 'booksellerid', 'aqorders' ] } );
+    my $invoices = Koha::Acquisition::Invoices->search(
+        { 'booksellerid.name' => { 'LIKE' => 'RBKC%' } },
+        { prefetch            => [ 'booksellerid', 'aqorders' ] }
+    );
 
     my $results       = "";
     my $invoice_count = 0;
