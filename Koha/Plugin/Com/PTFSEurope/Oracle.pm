@@ -86,19 +86,21 @@ sub report_step2 {
         $invoice_count++;
         my $lines  = "";
         my $orders = $invoice->_result->aqorders;
-        my $total  = 0;
 
         # Collect 'General Ledger lines'
         my $invoice_total = 0;
+        my $tax_amount = 0;
         while ( my $line = $orders->next ) {
             my $unitprice = Koha::Number::Price->new( $line->unitprice )->round * 100;
             $invoice_total = $invoice_total + $unitprice;
+            my $tax_value_on_receiving = Koha::Number::Price->new( $line->tax_value_on_receiving )->round * 100;
+            $tax_amount = $tax_amount + $tax_value_on_receiving;
             $lines .= "GL" . ","
               . $invoice->_result->booksellerid->accountnumber . ","
               . ","
               . $unitprice . ","
               . ","
-              . $line->tax_rate_bak . ","
+              . $line->tax_rate_on_receiving . ","
               . ","
               . ","
               . ","
@@ -117,7 +119,7 @@ sub report_step2 {
           . $invoice->invoicenumber . ","
           . ( $invoice->billingdate =~ s/-//gr ) . ","
           . $invoice_total . ","
-          . "TAX" . ","
+          . $tax_amount . ","
           . $invoice->_result->booksellerid->fax . ","
           . ( $invoice->shipmentdate =~ s/-//gr ) . ","
           . ",,,,,,,,,,,,,," . "\n";
