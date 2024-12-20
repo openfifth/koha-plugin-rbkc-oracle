@@ -34,10 +34,14 @@
         <div class="col-md-10 order-md-2 order-sm-1">
             <main>
                 <h1>Oracle Report - Results</h1>
-                <h2>Date Ran: [% date_ran | $KohaDates %]</h2>
-                <pre border=1>
-                    [% results | html %]
-                </pre>
+                <div class="page-section">
+                    <h2>Date run: [% date_ran | $KohaDates %]</h2>
+                    <div class="card">
+                        <pre class="card-body">
+                            [%- results | html -%]
+                        </pre>
+                    </div>
+                </div>
             </main>
         </div>
         <div class="col-md-2 order-sm-2 order-md-1">

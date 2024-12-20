@@ -8,7 +8,7 @@ use Koha::Number::Price;
 
 use Mojo::JSON qw{ decode_json };
 
-our $VERSION  = '0.0.7';
+our $VERSION  = '0.0.8';
 our $metadata = {
     name => 'Oracle Finance Integration',
 
@@ -150,7 +150,7 @@ sub report_step2 {
           . ","
           . ","
           . $invoice->_result->booksellerid->fax
-          . "\n"
+          . "\n";
         $results .= $lines;
     }
 
