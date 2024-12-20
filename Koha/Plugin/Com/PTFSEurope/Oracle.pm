@@ -8,7 +8,7 @@ use Koha::Number::Price;
 
 use Mojo::JSON qw{ decode_json };
 
-our $VERSION  = '0.0.6';
+our $VERSION  = '0.0.7';
 our $metadata = {
     name => 'Oracle Finance Integration',
 
@@ -99,7 +99,7 @@ sub report_step2 {
             $tax_amount = $tax_amount + $tax_value_on_receiving;
             $lines .= "GL" . ","
               . $invoice->_result->booksellerid->accountnumber . ","
-              . ","
+              . $invoice->invoicenumber . ","
               . $unitprice . ","
               . ","
               . $line->tax_rate_on_receiving . ","
@@ -110,7 +110,17 @@ sub report_step2 {
               . ","
               . $line->budget->budget_name . ","
               . $invoice->invoicenumber . ","
-              . ",,,,,,,,,," . "\n";
+              . ","
+              . ","
+              . ","
+              . ","
+              . ","
+              . ","
+              . ","
+              . ","
+              . ","
+              . "," 
+              . "\n";
         }
 
         # Add 'Accounts Payable line'
@@ -122,9 +132,25 @@ sub report_step2 {
           . ( $invoice->billingdate =~ s/-//gr ) . ","
           . $invoice_total . ","
           . $tax_amount . ","
-          . $invoice->_result->booksellerid->fax . ","
+          . $invoice->invoicenumber . ","
           . ( $invoice->shipmentdate =~ s/-//gr ) . ","
-          . ",,,,,,,,,,,,,," . "\n";
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . $invoice->_result->booksellerid->fax
+          . "\n"
         $results .= $lines;
     }
 
@@ -133,7 +159,27 @@ sub report_step2 {
     $results = "CT" . ","
       . $invoice_count . ","
       . $overall_total . ","
-      . ",,,,,,,,,,,,,,,,,,,," . "\n"
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . ","
+      . "\n"
       . $results;
 
     my $filename;
