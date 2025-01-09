@@ -147,7 +147,7 @@ sub _generate_report {
             my $tax_value_on_receiving = Koha::Number::Price->new( $line->tax_value_on_receiving )->round * 100;
             $tax_amount = $tax_amount + $tax_value_on_receiving;
             $lines .= "GL" . ","
-              . $invoice->_result->booksellerid->accountnumber . ","
+              . $invoice->_result->booksellerid->address1 . ","
               . $invoice->invoicenumber . ","
               . $unitprice . ","
               . ","
@@ -157,7 +157,7 @@ sub _generate_report {
               . ","
               . "Statistical" . ","
               . ","
-              . $line->budget->budget_name . ","
+              . $invoice->_result->booksellerid->type . ","
               . $invoice->invoicenumber . ","
               . ","
               . ","
@@ -176,9 +176,9 @@ sub _generate_report {
         $invoice_total = $invoice_total * -1;
         $overall_total = $overall_total + $invoice_total;
         $results .= "AP" . ","
-          . $invoice->booksellerid . ","
+          . $invoice->_result->booksellerid->accountnumber . ","
           . $invoice->invoicenumber . ","
-          . ( $invoice->billingdate =~ s/-//gr ) . ","
+          . ( $invoice->closeddate =~ s/-//gr ) . ","
           . $invoice_total . ","
           . $tax_amount . ","
           . $invoice->invoicenumber . ","
@@ -187,7 +187,7 @@ sub _generate_report {
           . ","
           . ","
           . ","
-          . ","
+          . $invoice->_result->booksellerid->invoiceprice->currency . ","
           . ","
           . ","
           . ","
