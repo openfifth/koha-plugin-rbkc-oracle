@@ -84,17 +84,18 @@ sub report_step2 {
 
     my $results = $self->_generate_report($startdate, $enddate);
 
-    my $filename;
+    my $templatefile;
     if ( $output eq "txt" ) {
-        print $cgi->header( -attachment => 'oracle.txt' );
-        $filename = 'report-step2-txt.tt';
+        my $filename = $self->_generate_filename;
+        print $cgi->header( -attachment => "$filename" );
+        $templatefile = 'report-step2-txt.tt';
     }
     else {
         print $cgi->header();
-        $filename = 'report-step2-html.tt';
+        $templatefile = 'report-step2-html.tt';
     }
 
-    my $template = $self->get_template( { file => $filename } );
+    my $template = $self->get_template( { file => $templatefile } );
 
     $template->param(
         date_ran  => dt_from_string(),
@@ -231,6 +232,15 @@ sub _generate_report {
       . $results;
 
       return $results;
+}
+
+sub _generate_filename {
+    my ($self, $args) = @_;
+
+    my $filename = "KC_LB01_" . dt_from_string()->strftime('%Y%m%d%H%M%S');
+    my $extension = ".txt";
+
+    return $filename . $extension;
 }
 
 1;
