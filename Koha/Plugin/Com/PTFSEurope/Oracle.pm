@@ -70,9 +70,6 @@ sub report_step2 {
     my $enddate   = $cgi->param('to');
     my $output    = $cgi->param('output');
 
-    my $dbh   = C4::Context->dbh;
-    my $where = { 'booksellerid.name' => { 'LIKE' => 'RBKC%' } };
-
     if ($startdate) {
         $startdate =~ s/^\s+//;
         $startdate =~ s/\s+$//;
@@ -84,6 +81,36 @@ sub report_step2 {
         $enddate =~ s/\s+$//;
         $enddate = eval { dt_from_string($enddate) };
     }
+
+    my $results = $self->_generate_report($startdate, $enddate);
+
+    my $filename;
+    if ( $output eq "txt" ) {
+        print $cgi->header( -attachment => 'oracle.txt' );
+        $filename = 'report-step2-txt.tt';
+    }
+    else {
+        print $cgi->header();
+        $filename = 'report-step2-html.tt';
+    }
+
+    my $template = $self->get_template( { file => $filename } );
+
+    $template->param(
+        date_ran  => dt_from_string(),
+        startdate => dt_from_string($startdate),
+        enddate   => dt_from_string($enddate),
+        results   => $results,
+    );
+
+    print $template->output();
+}
+
+sub _generate_report {
+    my ( $self, $startdate, $enddate ) = @_;
+
+    my $dbh   = C4::Context->dbh;
+    my $where = { 'booksellerid.name' => { 'LIKE' => 'RBKC%' } };
 
     my $dtf           = Koha::Database->new->schema->storage->datetime_parser;
     my $startdate_iso = $dtf->format_date($startdate);
@@ -99,10 +126,8 @@ sub report_step2 {
         $where->{'me.closedate'} = { '<=', $enddate_iso };
     }
 
-    my $invoices = Koha::Acquisition::Invoices->search(
-        $where,
-        { prefetch            => [ 'booksellerid', 'aqorders' ] }
-    );
+    my $invoices = Koha::Acquisition::Invoices->search( $where,
+        { prefetch => [ 'booksellerid', 'aqorders' ] } );
 
     my $results       = "";
     my $invoice_count = 0;
@@ -205,26 +230,7 @@ sub report_step2 {
       . "\n"
       . $results;
 
-    my $filename;
-    if ( $output eq "txt" ) {
-        print $cgi->header( -attachment => 'oracle.txt' );
-        $filename = 'report-step2-txt.tt';
-    }
-    else {
-        print $cgi->header();
-        $filename = 'report-step2-html.tt';
-    }
-
-    my $template = $self->get_template( { file => $filename } );
-
-    $template->param(
-        date_ran  => dt_from_string(),
-        startdate => dt_from_string($startdate),
-        enddate   => dt_from_string($enddate),
-        results   => $results,
-    );
-
-    print $template->output();
+      return $results;
 }
 
 1;
