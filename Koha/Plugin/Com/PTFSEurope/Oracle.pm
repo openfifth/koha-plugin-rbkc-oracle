@@ -8,7 +8,7 @@ use Koha::Number::Price;
 
 use Mojo::JSON qw{ decode_json };
 
-our $VERSION  = '0.0.9';
+our $VERSION  = '0.0.10';
 our $metadata = {
     name => 'Oracle Finance Integration',
 
@@ -178,7 +178,7 @@ sub _generate_report {
         $results .= "AP" . ","
           . $invoice->_result->booksellerid->accountnumber . ","
           . $invoice->invoicenumber . ","
-          . ( $invoice->closeddate =~ s/-//gr ) . ","
+          . ( $invoice->closedate =~ s/-//gr ) . ","
           . $invoice_total . ","
           . $tax_amount . ","
           . $invoice->invoicenumber . ","
