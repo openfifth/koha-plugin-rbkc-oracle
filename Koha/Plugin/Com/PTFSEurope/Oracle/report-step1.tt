@@ -41,12 +41,12 @@
 						<legend>Dates</legend>
                         <li>
                             <label for="from" class="required"> Date from:</label>
-                            <input type="text" size="10" id="from" name="from" value="[% from | html %]" class="flatpickr" data-date_to="to" required="required"/>
+                            <input type="text" size="10" id="from" name="from" value="[% startdate | $KohaDates date_format => 'iso' %]" class="flatpickr" data-date_to="to" required="required"/>
                             <span class="required">Required</span>
                         </li>
                         <li>
                             <label for="to" class="required"> Date to:</label>
-                            <input type="text" size="10" id="to" name="to" value="[% to | html %]" class="flatpickr" required="required"/>
+                            <input type="text" size="10" id="to" name="to" value="[% enddate | $KohaDates date_format => 'iso' %]" class="flatpickr" required="required"/>
                             <span class="required">Required</span>
                         </li>
                     </ol>

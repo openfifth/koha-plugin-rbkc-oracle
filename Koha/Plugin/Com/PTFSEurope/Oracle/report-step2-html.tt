@@ -23,8 +23,11 @@
         [% WRAPPER breadcrumb_item %]
             <a href="/cgi-bin/koha/reports/reports-home.pl">Reports</a>
         [% END %]
+        [% WRAPPER breadcrumb_item %]
+            <a href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS | uri %]&method=report&startdate=[% startdate | uri %]&enddate=[% enddate | uri %]">RBKC Oracle</a>
+        [% END %]
         [% WRAPPER breadcrumb_item bc_active= 1 %]
-            <span>RBKC Oracle</span>
+            <span>Results</span>
         [% END %]
     [% END #/ WRAPPER breadcrumbs %]
 [% END #/ WRAPPER sub-header.inc %]
@@ -35,7 +38,7 @@
             <main>
                 <h1>Oracle Report - Results - [% date_ran | $KohaDates %]</h1>
                 <div class="page-section">
-                <p>Report for invoices closed between [% startdate | $KohaDates %] and [% enddate | $KohaDates %]</p>
+                    <p>Report for invoices closed between [% startdate | $KohaDates %] and [% enddate | $KohaDates %]</p>
                     <div class="card">
                         <pre class="card-body">
                             [%- results | html -%]

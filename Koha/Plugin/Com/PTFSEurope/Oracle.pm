@@ -50,7 +50,15 @@ sub report_step1 {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
 
+    my $startdate = $cgi->param('startdate') ? dt_from_string($cgi->param('startdate')) : undef;
+    my $enddate   = $cgi->param('enddate') ? dt_from_string($cgi->param('enddate')) : undef;
+
     my $template = $self->get_template( { file => 'report-step1.tt' } );
+    $template->param(
+        startdate => $startdate,
+        enddate   => $enddate,
+    );
+
     $self->output_html( $template->output() );
 }
 
