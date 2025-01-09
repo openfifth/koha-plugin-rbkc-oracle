@@ -39,14 +39,17 @@
                     <input type="hidden" name="method" value="[% METHOD %]"/>
                     <fieldset class="rows">
 						<legend>Dates</legend>
-                        <ol>
-                            <li>
-                                <label>Date From:</label>
-                            </li>
-                            <li>
-                                <label>Date To:</label>
-                            </li>
-                        </ol>
+                        <li>
+                            <label for="from" class="required"> Date from:</label>
+                            <input type="text" size="10" id="from" name="from" value="[% from | html %]" class="flatpickr" data-date_to="to" required="required"/>
+                            <span class="required">Required</span>
+                        </li>
+                        <li>
+                            <label for="to" class="required"> Date to:</label>
+                            <input type="text" size="10" id="to" name="to" value="[% to | html %]" class="flatpickr" required="required"/>
+                            <span class="required">Required</span>
+                        </li>
+                    </ol>
                     </fieldset>
                     <fieldset class="rows">
 						<legend>Output</legend>
@@ -70,5 +73,9 @@
             <aside></aside>
         </div>
     </div>
+
+[% MACRO jsinclude BLOCK %]
+    [% INCLUDE 'calendar.inc' %]
+[% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]

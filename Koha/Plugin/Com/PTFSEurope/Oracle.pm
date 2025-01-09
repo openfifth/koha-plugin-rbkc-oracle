@@ -56,28 +56,43 @@ sub report_step1 {
 
 sub report_step2 {
     my ( $self, $args ) = @_;
+
     my $cgi = $self->{'cgi'};
+    my $startdate = $cgi->param('from');
+    my $enddate   = $cgi->param('to');
+    my $output    = $cgi->param('output');
 
-    my $dbh    = C4::Context->dbh;
-    my $output = $cgi->param('output');
+    my $dbh   = C4::Context->dbh;
+    my $where = { 'booksellerid.name' => { 'LIKE' => 'RBKC%' } };
 
-#    my $fromDay   = $cgi->param('fromDay');
-#    my $fromMonth = $cgi->param('fromMonth');
-#    my $fromYear  = $cgi->param('fromYear');
-#
-#    my $toDay   = $cgi->param('toDay');
-#    my $toMonth = $cgi->param('toMonth');
-#    my $toYear  = $cgi->param('toYear');
-#
-#    my ( $fromDate, $toDate );
-#    if ( $fromDay && $fromMonth && $fromYear && $toDay && $toMonth && $toYear )
-#    {
-#        $fromDate = "$fromYear-$fromMonth-$fromDay";
-#        $toDate   = "$toYear-$toMonth-$toDay";
-#    }
+    if ($startdate) {
+        $startdate =~ s/^\s+//;
+        $startdate =~ s/\s+$//;
+        $startdate = eval { dt_from_string($startdate) };
+    }
+
+    if ($enddate) {
+        $enddate =~ s/^\s+//;
+        $enddate =~ s/\s+$//;
+        $enddate = eval { dt_from_string($enddate) };
+    }
+
+    my $dtf           = Koha::Database->new->schema->storage->datetime_parser;
+    my $startdate_iso = $dtf->format_date($startdate);
+    my $enddate_iso   = $dtf->format_date($enddate);
+    if ( $startdate_iso && $enddate_iso ) {
+        $where->{'me.closedate'} =
+          [ -and => { '>=', $startdate_iso }, { '<=', $enddate_iso } ];
+    }
+    elsif ($startdate_iso) {
+        $where->{'me.closedate'} = { '>=', $startdate_iso };
+    }
+    elsif ($enddate_iso) {
+        $where->{'me.closedate'} = { '<=', $enddate_iso };
+    }
 
     my $invoices = Koha::Acquisition::Invoices->search(
-        { 'booksellerid.name' => { 'LIKE' => 'RBKC%' } },
+        $where,
         { prefetch            => [ 'booksellerid', 'aqorders' ] }
     );
 
@@ -195,8 +210,10 @@ sub report_step2 {
     my $template = $self->get_template( { file => $filename } );
 
     $template->param(
-        date_ran => dt_from_string(),
-        results  => $results,
+        date_ran  => dt_from_string(),
+        startdate => dt_from_string($startdate),
+        enddate   => dt_from_string($enddate),
+        results   => $results,
     );
 
     print $template->output();

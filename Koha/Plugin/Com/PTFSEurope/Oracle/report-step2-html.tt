@@ -33,9 +33,9 @@
     <div class="row">
         <div class="col-md-10 order-md-2 order-sm-1">
             <main>
-                <h1>Oracle Report - Results</h1>
+                <h1>Oracle Report - Results - [% date_ran | $KohaDates %]</h1>
                 <div class="page-section">
-                    <h2>Date run: [% date_ran | $KohaDates %]</h2>
+                <p>Report for invoices closed between [% startdate | $KohaDates %] and [% enddate | $KohaDates %]</p>
                     <div class="card">
                         <pre class="card-body">
                             [%- results | html -%]
