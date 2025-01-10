@@ -146,12 +146,18 @@ sub _generate_report {
             $invoice_total = $invoice_total + $unitprice;
             my $tax_value_on_receiving = Koha::Number::Price->new( $line->tax_value_on_receiving )->round * 100;
             $tax_amount = $tax_amount + $tax_value_on_receiving;
+            my $tax_rate_on_receiving = $line->tax_rate_on_receiving * 100;
+            my $tax_code =
+                $tax_rate_on_receiving == 20 ? 'P1'
+              : $tax_rate_on_receiving == 5  ? 'P2'
+              : $tax_rate_on_receiving == 0  ? 'P3'
+              :                                '';
             $lines .= "GL" . ","
               . $invoice->_result->booksellerid->address1 . ","
               . $invoice->invoicenumber . ","
               . $unitprice . ","
               . ","
-              . $line->tax_rate_on_receiving . ","
+              . $tax_code . ","
               . ","
               . ","
               . ","
