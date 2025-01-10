@@ -153,7 +153,7 @@ sub _generate_report {
               : $tax_rate_on_receiving == 0  ? 'P3'
               :                                '';
             $lines .= "GL" . ","
-              . $invoice->_result->booksellerid->address1 . ","
+              . $self->_map_fund_to_suppliernumber($line->budget->budget_name) . ","
               . $invoice->invoicenumber . ","
               . $unitprice . ","
               . ","
@@ -163,7 +163,7 @@ sub _generate_report {
               . ","
               . "Statistical" . ","
               . ","
-              . $invoice->_result->booksellerid->type . ","
+              . $self->_map_fund_to_costcenter($line->budget->budget_name) . ","
               . $invoice->invoicenumber . ","
               . ","
               . ","
@@ -247,6 +247,76 @@ sub _generate_filename {
     my $extension = ".txt";
 
     return $filename . $extension;
+}
+
+sub _map_fund_to_costcenter {
+    my ($self, $fund) = @_;
+    my $map = {
+        KAFI   => "E26315",
+        KANF   => "E26315",
+        KARC   => "E26311",
+        KBAS   => "E26315",
+        KCFI   => "E26315",
+        KCHG   => "E26315",
+        KCNF   => "E26315",
+        KCOM   => "E26315",
+        KEBE   => "E26315",
+        KELE   => "E26315",
+        KERE   => "E26341",
+        KFSO   => "E26315",
+        KHLS   => "E26330",
+        KLPR   => "E26315",
+        KNHC   => "E26315",
+        KNSO   => "E26315",
+        KPER   => "E26315",
+        KRCHI  => "E26315",
+        KREF   => "E26315",
+        KREFSO => "E26315",
+        KREP   => "E26315",
+        KREQ   => "E26315",
+        KRFI   => "E26315",
+        KRNF   => "E26315",
+        KSPO   => "E26315",
+        KSSS   => "E26315",
+        KVAT   => "E26315",
+        KYAD   => "E26315",
+    };
+    return $map->{$fund};
+}
+
+sub _map_fund_to_suppliernumber {
+    my ($self, $fund) = @_;
+    my $map = {
+        KAFI   => 4539,
+        KANF   => 4539,
+        KARC   => 4539,
+        KBAS   => 4539,
+        KCFI   => 4539,
+        KCHG   => 4539,
+        KCNF   => 4539,
+        KCOM   => 4539,
+        KEBE   => 4539,
+        KELE   => 4539,
+        KERE   => 5190,
+        KFSO   => 4539,
+        KHLS   => 4539,
+        KLPR   => 4539,
+        KNHC   => 4539,
+        KNSO   => 4539,
+        KPER   => 4625,
+        KRCHI  => 4539,
+        KREF   => 4539,
+        KREFSO => 4539,
+        KREP   => 4539,
+        KREQ   => 4539,
+        KRFI   => 4539,
+        KRNF   => 4539,
+        KSPO   => 4539,
+        KSSS   => 4539,
+        KVAT   => 4539,
+        KYAD   => 4539,
+    };
+    return $map->{$fund};
 }
 
 1;
