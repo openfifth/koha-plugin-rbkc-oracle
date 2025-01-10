@@ -8,7 +8,7 @@ use Koha::Number::Price;
 
 use Mojo::JSON qw{ decode_json };
 
-our $VERSION  = '0.0.10';
+our $VERSION  = '0.0.11';
 our $metadata = {
     name => 'Oracle Finance Integration',
 
