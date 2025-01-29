@@ -1,0 +1,79 @@
+[% USE raw %]
+[% USE Asset %]
+[% USE KohaDates %]
+[% PROCESS 'i18n.inc' %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% FILTER collapse %]
+    [% t("KMBC Oracle") | html %] &rsaquo;
+    [% t("Plugins") | html %] &rsaquo;
+    [% t("Koha") | html %]
+[% END %]</title>
+ <script type="text/javascript" src="[% PLUGIN_PATH %]/datepicker/js/datepicker.js"></script>
+ <link href="[% PLUGIN_PATH %]/datepicker/css/datepicker.css" rel="stylesheet" type="text/css" />
+[% INCLUDE 'doc-head-close.inc' %]
+</head>
+<body id="plugins_kmbc_oracle" class="plugins">
+[% WRAPPER 'header.inc' %]
+    [% INCLUDE 'cat-search.inc' %]
+[% END %]
+
+[% WRAPPER 'sub-header.inc' %]
+    [% WRAPPER breadcrumbs %]
+        [% WRAPPER breadcrumb_item %]
+            <a href="/cgi-bin/koha/plugins/plugins-home.pl?method=report">Plugins</a>
+        [% END %]
+        [% WRAPPER breadcrumb_item %]
+            <a href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS | uri %]&method=report">RBKC Oracle</a>
+        [% END %]
+        [% WRAPPER breadcrumb_item bc_active= 1 %]
+            <span>Configuration</span>
+        [% END %]
+    [% END #/ WRAPPER breadcrumbs %]
+[% END #/ WRAPPER sub-header.inc %]
+
+<div id="main container-fluid">
+    <div class="row">
+        <div class="col-md-10 order-md-2 order-sm-1">
+            <main>
+                <h1>Oracle Report - Configuration</h1>
+                [% IF available_transports.count %]
+                <form method="get">
+                    <input type="hidden" name="class" value="[% CLASS %]"/>
+                    <input type="hidden" name="method" value="[% METHOD %]"/>
+                    <fieldset class="rows">
+						<legend>Transport</legend>
+						<ol>
+                            <li>
+                                <label for="transport_server">(S)FTP server to transfer to:</label>
+                                <select name="transport_server">
+                                [% FOREACH transport IN available_transports %]
+                                    [% IF transport.id == transport_server.id %]
+                                    <option value="[% transport.id %]" selected>[% transport.name %]</option>
+                                    [% ELSE %]
+                                    <option value="[% transport.id %]">[% transport.name %]</option>
+                                    [% END %]
+                                [% END %]
+                                </select>
+                            </li>
+                        </ol>
+                    </fieldset>
+                    <fieldset class="action">
+                        <input type="hidden" name="save" value="1" />
+                        <input type="submit" class="btn btn-primary" value="Save configuration" />
+                        <a class="cancel" href="/cgi-bin/koha/plugins/plugins-home.pl?method=report">Cancel</a>
+					</fieldset>
+                </form>
+                [% ELSE %]
+                <div class="alert alert-info">
+                    No transports found, would you like to <a href="/cgi-bin/koha/admin/sftp_servers.pl?op=add_form">add</a> one?
+                </div>
+                [% END %]
+            </main>
+        </div>
+        <div class="col-md-2 order-sm-2 order-md-1">
+            <aside></aside>
+        </div>
+    </div>
+
+[% INCLUDE 'intranet-bottom.inc' %]

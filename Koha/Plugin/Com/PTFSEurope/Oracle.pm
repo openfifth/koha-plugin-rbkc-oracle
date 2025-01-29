@@ -4,6 +4,7 @@ use Modern::Perl;
 
 use base            qw{ Koha::Plugins::Base };
 use Koha::DateUtils qw(dt_from_string);
+use Koha::File::Transports;
 use Koha::Number::Price;
 
 use Mojo::JSON qw{ decode_json };
@@ -32,6 +33,40 @@ sub new {
     $self->{cgi} = CGI->new();
 
     return $self;
+}
+
+sub configure {
+    my ( $self, $args ) = @_;
+    my $cgi = $self->{'cgi'};
+
+    unless ( $cgi->param('save') ) {
+        my $template = $self->get_template( { file => 'configure.tt' } );
+
+        ## Grab the values we already have for our settings, if any exist
+        my $available_transports = Koha::File::Transports->search();
+        $template->param(
+            transport_server     => $self->retrieve_data('transport_server'),
+            available_transports => $available_transports
+        );
+
+        $self->output_html( $template->output() );
+    }
+    else {
+        $self->store_data(
+            {
+                transport_server => $cgi->param('transport_server'),
+            }
+        );
+        $self->go_home();
+    }
+}
+
+sub cronjob_nightly {
+    my ($self) = @_;
+    my $transport = Koha::File::Transports->find($self->retrieve_data('transport_server'));
+    return unless $transport;
+
+
 }
 
 sub report {
