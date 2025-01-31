@@ -188,7 +188,7 @@ sub _generate_report {
               : $tax_rate_on_receiving == 0  ? 'P3'
               :                                '';
             $lines .= "GL" . ","
-              . $self->_map_fund_to_suppliernumber($line->budget->budget_name) . ","
+              . $self->_map_fund_to_suppliernumber($line->budget->budget_code) . ","
               . $invoice->invoicenumber . ","
               . $unitprice . ","
               . ","
@@ -198,7 +198,7 @@ sub _generate_report {
               . ","
               . "Statistical" . ","
               . ","
-              . $self->_map_fund_to_costcenter($line->budget->budget_name) . ","
+              . $self->_map_fund_to_costcenter($line->budget->budget_code) . ","
               . $invoice->invoicenumber . ","
               . ","
               . ","
