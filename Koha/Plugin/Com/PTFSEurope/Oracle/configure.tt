@@ -58,6 +58,18 @@
                             </li>
                         </ol>
                     </fieldset>
+                    <fieldset class="rows">
+                        <legend>Transfer days</legend>
+                        <ol>
+                            <li><input type="checkbox" name="days" value="0"><label> Sunday</label></li>
+                            <li><input type="checkbox" name="days" value="1"><label> Monday</label></li>
+                            <li><input type="checkbox" name="days" value="2"><label> Tuesday</label></li>
+                            <li><input type="checkbox" name="days" value="3"><label> Wednesday</label></li>
+                            <li><input type="checkbox" name="days" value="4"><label> Thursday</label></li>
+                            <li><input type="checkbox" name="days" value="5"><label> Friday</label></li>
+                            <li><input type="checkbox" name="days" value="6"><label> Saturday</label></li>
+                        </ol>
+                    </fieldset>
                     <fieldset class="action">
                         <input type="hidden" name="save" value="1" />
                         <input type="submit" class="btn btn-primary" value="Save configuration" />

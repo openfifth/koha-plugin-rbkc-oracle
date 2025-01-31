@@ -52,9 +52,13 @@ sub configure {
         $self->output_html( $template->output() );
     }
     else {
+        # Get selected days (returns an array from multiple checkboxes)
+        my @selected_days = $cgi->param('days');
+        my $days_str = join(',', sort { $a <=> $b } @selected_days);
         $self->store_data(
             {
                 transport_server => $cgi->param('transport_server'),
+                transport_days   => $days_str
             }
         );
         $self->go_home();
@@ -63,10 +67,41 @@ sub configure {
 
 sub cronjob_nightly {
     my ($self) = @_;
+    
+    my $transport_days = $self->retrieve_data('transport_days');
+    return unless $transport_days;
+
+    my @selected_days = sort { $a <=> $b } split( /,/, $transport_days );
+    my %selected_days = map { $_ => 1 } @selected_days;
+
+    # Get current day of the week (0=Sunday, ..., 6=Saturday)
+    my $today = dt_from_string()->day_of_week % 7;
+    return unless $selected_days{$today};
+
     my $transport = Koha::File::Transports->find($self->retrieve_data('transport_server'));
     return unless $transport;
 
+    # Find start date (previous selected day) and end date (today)
+    my $previous_day = max(grep { $_ < $today } @sorted_days);  # Last selected before today
+    $previous_day //= $sorted_days[-1]; # Wrap around to last one from previous week
 
+    # Calculate the start date (previous selected day) and end date (today)
+    my $now = DateTime->now;
+    my $start_date = $now->clone->subtract(days => ($today - $previous_day) % 7);
+    my $end_date   = $now;
+
+    my $report = $self->_generate_report($start_date, $end_date);
+    my $filename = $self->_generate_filename();
+
+    open my $fh, '<', \$report;
+    if ( $transport->file_upload($fh, $filename) ) {
+        close $fh;
+        return 1;
+    } else {
+        # Deal with transport errors?
+        close $fh;
+        return 0;
+    }
 }
 
 sub report {
