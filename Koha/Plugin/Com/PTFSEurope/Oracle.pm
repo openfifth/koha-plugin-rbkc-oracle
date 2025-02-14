@@ -82,8 +82,8 @@ sub cronjob_nightly {
     return unless $transport;
 
     # Find start date (previous selected day) and end date (today)
-    my $previous_day = max(grep { $_ < $today } @sorted_days);  # Last selected before today
-    $previous_day //= $sorted_days[-1]; # Wrap around to last one from previous week
+    my $previous_day = max(grep { $_ < $today } @selected_days);  # Last selected before today
+    $previous_day //= $selected_days[-1]; # Wrap around to last one from previous week
 
     # Calculate the start date (previous selected day) and end date (today)
     my $now = DateTime->now;
