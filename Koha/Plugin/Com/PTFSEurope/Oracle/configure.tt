@@ -5,7 +5,7 @@
 [% SET footerjs = 1 %]
 [% INCLUDE 'doc-head-open.inc' %]
 <title>[% FILTER collapse %]
-    [% t("KMBC Oracle") | html %] &rsaquo;
+    [% t("RBKC Oracle") | html %] &rsaquo;
     [% t("Plugins") | html %] &rsaquo;
     [% t("Koha") | html %]
 [% END %]</title>
@@ -13,7 +13,7 @@
  <link href="[% PLUGIN_PATH %]/datepicker/css/datepicker.css" rel="stylesheet" type="text/css" />
 [% INCLUDE 'doc-head-close.inc' %]
 </head>
-<body id="plugins_kmbc_oracle" class="plugins">
+<body id="plugins_rbkc_oracle" class="plugins">
 [% WRAPPER 'header.inc' %]
     [% INCLUDE 'cat-search.inc' %]
 [% END %]
