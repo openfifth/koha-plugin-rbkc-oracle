@@ -7,6 +7,8 @@ use Koha::DateUtils qw(dt_from_string);
 use Koha::File::Transports;
 use Koha::Number::Price;
 
+use File::Spec;
+use List::Util qw(min max);
 use Mojo::JSON qw{ decode_json };
 
 our $VERSION  = '0.0.13';
@@ -44,8 +46,16 @@ sub configure {
 
         ## Grab the values we already have for our settings, if any exist
         my $available_transports = Koha::File::Transports->search();
+        my @days_of_week = qw(sunday monday tuesday wednesday thursday friday saturday);
+        my $transport_days = {
+            map { $days_of_week[$_] => 1 }
+            grep { defined $days_of_week[$_] }
+            split(',', $self->retrieve_data('transport_days'))
+        };
         $template->param(
             transport_server     => $self->retrieve_data('transport_server'),
+            transport_days       => $transport_days,
+            output               => $self->retrieve_data('output'),
             available_transports => $available_transports
         );
 
@@ -58,7 +68,8 @@ sub configure {
         $self->store_data(
             {
                 transport_server => $cgi->param('transport_server'),
-                transport_days   => $days_str
+                transport_days   => $days_str,
+                output           => $cgi->param('output')
             }
         );
         $self->go_home();
@@ -78,8 +89,12 @@ sub cronjob_nightly {
     my $today = dt_from_string()->day_of_week % 7;
     return unless $selected_days{$today};
 
-    my $transport = Koha::File::Transports->find($self->retrieve_data('transport_server'));
-    return unless $transport;
+    my $output = $self->retrieve_data('output');
+    my $transport;
+    if ( $output eq 'upload' ) {
+        $transport = Koha::File::Transports->find($self->retrieve_data('transport_server'));
+        return unless $transport;
+    }
 
     # Find start date (previous selected day) and end date (today)
     my $previous_day = max(grep { $_ < $today } @selected_days);  # Last selected before today
@@ -93,14 +108,23 @@ sub cronjob_nightly {
     my $report = $self->_generate_report($start_date, $end_date);
     my $filename = $self->_generate_filename();
 
-    open my $fh, '<', \$report;
-    if ( $transport->file_upload($fh, $filename) ) {
-        close $fh;
-        return 1;
+    if ( $output eq 'upload' ) {
+        $transport->connect;
+        open my $fh, '<', \$report;
+        if ( $transport->file_upload($fh, $filename) ) {
+            close $fh;
+            return 1;
+        } else {
+            # Deal with transport errors?
+            close $fh;
+            return 0;
+        }
     } else {
-        # Deal with transport errors?
-        close $fh;
-        return 0;
+        my $file_path = File::Spec->catfile($self->bundle_path, 'output', $filename);
+        open(my $fh, '>', $file_path) or die "Unable to open $file_path: $!";
+        print $fh $report;
+        close($fh);
+        return 1;
     }
 }
 
