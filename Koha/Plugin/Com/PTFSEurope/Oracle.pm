@@ -67,9 +67,9 @@ sub configure {
         my $days_str = join(',', sort { $a <=> $b } @selected_days);
         $self->store_data(
             {
-                transport_server => $cgi->param('transport_server'),
+                transport_server => scalar $cgi->param('transport_server'),
                 transport_days   => $days_str,
-                output           => $cgi->param('output')
+                output           => scalar $cgi->param('output')
             }
         );
         $self->go_home();
