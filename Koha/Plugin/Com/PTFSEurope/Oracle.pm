@@ -63,7 +63,7 @@ sub configure {
     }
     else {
         # Get selected days (returns an array from multiple checkboxes)
-        my @selected_days = $cgi->param('days');
+        my @selected_days = $cgi->multi_param('days');
         my $days_str = join(',', sort { $a <=> $b } @selected_days);
         $self->store_data(
             {
