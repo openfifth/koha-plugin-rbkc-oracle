@@ -235,6 +235,8 @@ sub _generate_report {
         # Collect 'General Ledger lines'
         my $invoice_total = 0;
         my $tax_amount = 0;
+        my $suppliernumber;
+        my $costcenter;
         while ( my $line = $orders->next ) {
             my $unitprice = Koha::Number::Price->new( $line->unitprice )->round * 100;
             $invoice_total = $invoice_total + $unitprice;
@@ -268,8 +270,11 @@ sub _generate_report {
               . ","
               . ","
               . ","
-              . "," 
+              . ","
               . "\n";
+
+            $suppliernumber = $self->_map_fund_to_suppliernumber($line->budget->budget_code);
+            $costcenter = $self->_map_fund_to_costcenter($line->budget->budget_code);
         }
 
         # Add 'Accounts Payable line'
@@ -283,8 +288,8 @@ sub _generate_report {
           . $tax_amount . ","
           . $invoice->invoicenumber . ","
           . ( $invoice->shipmentdate =~ s/-//gr ) . ","
-          . ","
-          . ","
+          . $costcenter . ","
+          . $suppliernumber . ","
           . ","
           . ","
           . $invoice->_result->booksellerid->invoiceprice->currency . ","
@@ -375,7 +380,8 @@ sub _map_fund_to_costcenter {
         KVAT   => "E26315",
         KYAD   => "E26315",
     };
-    return $map->{$fund};
+    my $return = defined($map->{$fund}) ? $map->{$fund} : 'UNMAPPED';
+    return $return;
 }
 
 sub _map_fund_to_suppliernumber {
@@ -410,7 +416,8 @@ sub _map_fund_to_suppliernumber {
         KVAT   => 4539,
         KYAD   => 4539,
     };
-    return $map->{$fund};
+    my $return = defined($map->{$fund}) ? $map->{$fund} : 'UNMAPPED';
+    return $return;
 }
 
 1;
