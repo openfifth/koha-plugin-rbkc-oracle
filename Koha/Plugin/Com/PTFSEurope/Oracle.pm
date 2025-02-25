@@ -342,7 +342,7 @@ sub _generate_report {
 sub _generate_filename {
     my ($self, $args) = @_;
 
-    my $filename = "KC_LB01_" . dt_from_string()->strftime('%Y%m%d%H%M%S');
+    my $filename = "KC_LB02_" . dt_from_string()->strftime('%Y%m%d%H%M%S');
     my $extension = ".txt";
 
     return $filename . $extension;
