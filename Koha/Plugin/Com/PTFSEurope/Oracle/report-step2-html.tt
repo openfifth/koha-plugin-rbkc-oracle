@@ -40,9 +40,7 @@
                 <div class="page-section">
                     <p>Report for invoices closed between [% startdate | $KohaDates %] and [% enddate | $KohaDates %]</p>
                     <div class="card">
-                        <pre class="card-body">
-                            [%- results | html -%]
-                        </pre>
+                        <pre class="card-body">[%- results | html -%]</pre>
                     </div>
                 </div>
             </main>
