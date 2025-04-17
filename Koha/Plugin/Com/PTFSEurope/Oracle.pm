@@ -105,27 +105,35 @@ sub cronjob_nightly {
     my $start_date = $now->clone->subtract(days => ($today - $previous_day) % 7);
     my $end_date   = $now;
 
-    my $report = $self->_generate_report($start_date, $end_date);
-    my $filename = $self->_generate_filename();
+    my $report = $self->_generate_report( $start_date, $end_date );
+    if ($report) {
+        my $filename = $self->_generate_filename();
 
-    if ( $output eq 'upload' ) {
-        $transport->connect;
-        open my $fh, '<', \$report;
-        if ( $transport->file_upload($fh, $filename) ) {
-            close $fh;
-            return 1;
-        } else {
-            # Deal with transport errors?
-            close $fh;
-            return 0;
+        if ( $output eq 'upload' ) {
+            $transport->connect;
+            open my $fh, '<', \$report;
+            if ( $transport->file_upload( $fh, $filename ) ) {
+                close $fh;
+                return 1;
+            }
+            else {
+                # Deal with transport errors?
+                close $fh;
+                return 0;
+            }
         }
-    } else {
-        my $file_path = File::Spec->catfile($self->bundle_path, 'output', $filename);
-        open(my $fh, '>', $file_path) or die "Unable to open $file_path: $!";
-        print $fh $report;
-        close($fh);
-        return 1;
+        else {
+            my $file_path =
+              File::Spec->catfile( $self->bundle_path, 'output', $filename );
+            open( my $fh, '>', $file_path )
+              or die "Unable to open $file_path: $!";
+            print $fh $report;
+            close($fh);
+            return 1;
+        }
     }
+
+    return 1;
 }
 
 sub report {
@@ -224,43 +232,78 @@ sub _generate_report {
     my $invoices = Koha::Acquisition::Invoices->search( $where,
         { prefetch => [ 'booksellerid', 'aqorders' ] } );
 
-    my $results       = "";
+    my $results;
     my $invoice_count = 0;
     my $overall_total = 0;
-    while ( my $invoice = $invoices->next ) {
-        $invoice_count++;
-        my $lines  = "";
-        my $orders = $invoice->_result->aqorders;
 
-        # Collect 'General Ledger lines'
-        my $invoice_total = 0;
-        my $tax_amount = 0;
-        my $suppliernumber;
-        my $costcenter;
-        while ( my $line = $orders->next ) {
-            my $unitprice = Koha::Number::Price->new( $line->unitprice )->round * 100;
-            $invoice_total = $invoice_total + $unitprice;
-            my $tax_value_on_receiving = Koha::Number::Price->new( $line->tax_value_on_receiving )->round * 100;
-            $tax_amount = $tax_amount + $tax_value_on_receiving;
-            my $tax_rate_on_receiving = $line->tax_rate_on_receiving * 100;
-            my $tax_code =
-                $tax_rate_on_receiving == 20 ? 'P1'
-              : $tax_rate_on_receiving == 5  ? 'P2'
-              : $tax_rate_on_receiving == 0  ? 'P3'
-              :                                '';
-            $lines .= "GL" . ","
-              . $self->_map_fund_to_suppliernumber($line->budget->budget_code) . ","
+    if ( $invoice->count ) {
+        $results = "";
+        while ( my $invoice = $invoices->next ) {
+            $invoice_count++;
+            my $lines  = "";
+            my $orders = $invoice->_result->aqorders;
+    
+            # Collect 'General Ledger lines'
+            my $invoice_total = 0;
+            my $tax_amount = 0;
+            my $suppliernumber;
+            my $costcenter;
+            while ( my $line = $orders->next ) {
+                my $unitprice = Koha::Number::Price->new( $line->unitprice )->round * 100;
+                $invoice_total = $invoice_total + $unitprice;
+                my $tax_value_on_receiving = Koha::Number::Price->new( $line->tax_value_on_receiving )->round * 100;
+                $tax_amount = $tax_amount + $tax_value_on_receiving;
+                my $tax_rate_on_receiving = $line->tax_rate_on_receiving * 100;
+                my $tax_code =
+                    $tax_rate_on_receiving == 20 ? 'P1'
+                  : $tax_rate_on_receiving == 5  ? 'P2'
+                  : $tax_rate_on_receiving == 0  ? 'P3'
+                  :                                '';
+                $lines .= "GL" . ","
+                  . $self->_map_fund_to_suppliernumber($line->budget->budget_code) . ","
+                  . $invoice->invoicenumber . ","
+                  . $unitprice . ","
+                  . ","
+                  . $tax_code . ","
+                  . ","
+                  . ","
+                  . ","
+                  . "Statistical" . ","
+                  . ","
+                  . $self->_map_fund_to_costcenter($line->budget->budget_code) . ","
+                  . $invoice->invoicenumber . ","
+                  . ","
+                  . ","
+                  . ","
+                  . ","
+                  . ","
+                  . ","
+                  . ","
+                  . ","
+                  . ","
+                  . ","
+                  . "\n";
+    
+                $suppliernumber = $self->_map_fund_to_suppliernumber($line->budget->budget_code);
+                $costcenter = $self->_map_fund_to_costcenter($line->budget->budget_code);
+            }
+    
+            # Add 'Accounts Payable line'
+            $invoice_total = $invoice_total * -1;
+            $overall_total = $overall_total + $invoice_total;
+            $results .= "AP" . ","
+              . $invoice->_result->booksellerid->accountnumber . ","
               . $invoice->invoicenumber . ","
-              . $unitprice . ","
-              . ","
-              . $tax_code . ","
-              . ","
-              . ","
-              . ","
-              . "Statistical" . ","
-              . ","
-              . $self->_map_fund_to_costcenter($line->budget->budget_code) . ","
+              . ( $invoice->closedate =~ s/-//gr ) . ","
+              . $invoice_total . ","
+              . $tax_amount . ","
               . $invoice->invoicenumber . ","
+              . ( $invoice->shipmentdate =~ s/-//gr ) . ","
+              . $costcenter . ","
+              . $suppliernumber . ","
+              . ","
+              . ","
+              . $invoice->_result->booksellerid->invoiceprice->currency . ","
               . ","
               . ","
               . ","
@@ -271,28 +314,16 @@ sub _generate_report {
               . ","
               . ","
               . ","
+              . $invoice->_result->booksellerid->fax
               . "\n";
-
-            $suppliernumber = $self->_map_fund_to_suppliernumber($line->budget->budget_code);
-            $costcenter = $self->_map_fund_to_costcenter($line->budget->budget_code);
+            $results .= $lines;
         }
-
-        # Add 'Accounts Payable line'
-        $invoice_total = $invoice_total * -1;
-        $overall_total = $overall_total + $invoice_total;
-        $results .= "AP" . ","
-          . $invoice->_result->booksellerid->accountnumber . ","
-          . $invoice->invoicenumber . ","
-          . ( $invoice->closedate =~ s/-//gr ) . ","
-          . $invoice_total . ","
-          . $tax_amount . ","
-          . $invoice->invoicenumber . ","
-          . ( $invoice->shipmentdate =~ s/-//gr ) . ","
-          . $costcenter . ","
-          . $suppliernumber . ","
-          . ","
-          . ","
-          . $invoice->_result->booksellerid->invoiceprice->currency . ","
+    
+        # Add 'Control Total line'
+        $overall_total = $overall_total * -1;
+        $results = "CT" . ","
+          . $invoice_count . ","
+          . $overall_total . ","
           . ","
           . ","
           . ","
@@ -303,38 +334,19 @@ sub _generate_report {
           . ","
           . ","
           . ","
-          . $invoice->_result->booksellerid->fax
-          . "\n";
-        $results .= $lines;
-    }
-
-    # Add 'Control Total line'
-    $overall_total = $overall_total * -1;
-    $results = "CT" . ","
-      . $invoice_count . ","
-      . $overall_total . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . "\n"
-      . $results;
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . ","
+          . "\n"
+          . $results;
+      }
 
       return $results;
 }

@@ -39,9 +39,13 @@
                 <h1>Oracle Report - Results - [% date_ran | $KohaDates %]</h1>
                 <div class="page-section">
                     <p>Report for invoices closed between [% startdate | $KohaDates %] and [% enddate | $KohaDates %]</p>
+                    [%- IF results -%]
                     <div class="card">
                         <pre class="card-body">[%- results | html -%]</pre>
                     </div>
+                    [%- ELSE -%]
+                    <div class="alert alert-warning">No invoices found for defined date range</div>
+                    [%- END -%]
                 </div>
             </main>
         </div>
