@@ -11,7 +11,7 @@ use File::Spec;
 use List::Util qw(min max);
 use Mojo::JSON qw{ decode_json };
 
-our $VERSION  = '0.0.19';
+our $VERSION  = '0.0.20';
 our $metadata = {
     name => 'Oracle Finance Integration',
 
@@ -236,7 +236,7 @@ sub _generate_report {
     my $invoice_count = 0;
     my $overall_total = 0;
 
-    if ( $invoice->count ) {
+    if ( $invoices->count ) {
         $results = "";
         while ( my $invoice = $invoices->next ) {
             $invoice_count++;
