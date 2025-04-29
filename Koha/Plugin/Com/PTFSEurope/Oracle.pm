@@ -268,7 +268,7 @@ sub _generate_report {
                   . ","
                   . ","
                   . ","
-                  . "Statistical" . ","
+                  . ","
                   . ","
                   . $self->_map_fund_to_costcenter($line->budget->budget_code) . ","
                   . $invoice->invoicenumber . ","
