@@ -1,35 +1,35 @@
 {
-    "name": "koha-plugin-rbkc-oracle",
-    "version": "0.0.21",
-    "previous_version": "0.0.1",
-    "description": "A Koha plugin to manage finance integration with Oracle for RBKC",
-    "plugin": {
-        "module": "Koha::Plugin::Com::OpenFifth::Oracle",
-        "pm_path": "Koha/Plugin/Com/OpenFifth/Oracle.pm"
-    },
-    "scripts": {
-        "test": "prove t/",
-        "test:verbose": "prove -v t/",
-        "version:patch": "node increment_version.js patch",
-        "version:minor": "node increment_version.js minor",
-        "version:major": "node increment_version.js major",
-        "release:patch": "npm run version:patch && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags",
-        "release:minor": "npm run version:minor && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags",
-        "release:major": "npm run version:major && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/openfifth/koha-plugin-rbkc-oracle.git"
-    },
-    "author": "Open Fifth",
-    "license": "GPL-3.0",
-    "bugs": {
-        "url": "https://github.com/openfifth/koha-plugin-rbkc-oracle/issues"
-    },
-    "homepage": "https://github.com/openfifth/koha-plugin-rbkc-oracle#readme",
-    "devDependencies": {
-        "json-maybexs": "^1.0.0",
-        "path-tiny": "^1.0.0",
-        "test-exception": "^1.0.0"
-    }
+  "name": "koha-plugin-rbkc-oracle",
+  "version": "0.0.22",
+  "previous_version": "0.0.21",
+  "description": "A Koha plugin to manage finance integration with Oracle for RBKC",
+  "plugin": {
+    "module": "Koha::Plugin::Com::OpenFifth::Oracle",
+    "pm_path": "Koha/Plugin/Com/OpenFifth/Oracle.pm"
+  },
+  "scripts": {
+    "test": "prove t/",
+    "test:verbose": "prove -v t/",
+    "version:patch": "node increment_version.js patch",
+    "version:minor": "node increment_version.js minor",
+    "version:major": "node increment_version.js major",
+    "release:patch": "npm run version:patch && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags",
+    "release:minor": "npm run version:minor && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags",
+    "release:major": "npm run version:major && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openfifth/koha-plugin-rbkc-oracle.git"
+  },
+  "author": "Open Fifth",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/openfifth/koha-plugin-rbkc-oracle/issues"
+  },
+  "homepage": "https://github.com/openfifth/koha-plugin-rbkc-oracle#readme",
+  "devDependencies": {
+    "json-maybexs": "^1.0.0",
+    "path-tiny": "^1.0.0",
+    "test-exception": "^1.0.0"
+  }
 }
