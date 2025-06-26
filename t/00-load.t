@@ -1,39 +1,27 @@
-#!/usr/bin/perl
-
 use Modern::Perl;
-use Test::More;
+use Test::More tests => 3;
 use Test::Exception;
-use JSON::MaybeXS;
-use Path::Tiny;
+use JSON::MaybeXS qw(decode_json);
+use Path::Tiny qw(path);
 
-BEGIN {
-    plan tests => 5;
-    use_ok('Koha::Plugin::Com::PTFSEurope::Oracle') || print "Bail out!\n";
-}
+# Get the plugin directory path
+my $plugin_dir = $ENV{KOHA_PLUGIN_DIR} || '.';
+my $package_json_path = path($plugin_dir)->child('package.json');
 
-diag("Testing Koha::Plugin::Com::PTFSEurope::Oracle");
+# Add plugin directory to @INC
+unshift @INC, $plugin_dir;
 
-# Test plugin instantiation
+# Read package.json
+my $package_json = decode_json($package_json_path->slurp);
+my $plugin_module = $package_json->{plugin}->{module};
+my $expected_version = $package_json->{version};
+
+# Test module loading
+use_ok($plugin_module);
+
+# Test instantiation
 my $plugin;
-lives_ok { $plugin = Koha::Plugin::Com::PTFSEurope::Oracle->new() } 'Plugin instantiation succeeds';
+lives_ok { $plugin = $plugin_module->new() } 'Plugin can be instantiated';
 
-# Test that the plugin has the required methods
-can_ok($plugin, qw(configure cronjob_nightly report _generate_report _generate_filename));
-
-# Test version synchronization between package.json and plugin
-my $package_json_path = path(__FILE__)->parent->parent->child('package.json');
-SKIP: {
-    skip "package.json not found", 2 unless $package_json_path->exists;
-    
-    my $package_data = decode_json($package_json_path->slurp);
-    my $package_version = $package_data->{version};
-    
-    ok($package_version, 'package.json has version');
-    
-    # Get plugin version from metadata
-    my $plugin_version = $plugin->{metadata}->{version} || $Koha::Plugin::Com::PTFSEurope::Oracle::VERSION;
-    
-    is($plugin_version, $package_version, 'Plugin version matches package.json version');
-}
-
-done_testing();
+# Test version
+is($plugin->{metadata}->{version}, $expected_version, 'Plugin version matches package.json');

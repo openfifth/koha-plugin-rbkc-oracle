@@ -200,7 +200,7 @@ For new features:
 
 - Create an issue for questions
 - Check existing issues and documentation
-- Contact PTFS Europe for RBKC-specific requirements
+- Contact Open Fifth for RBKC-specific requirements
 
 ## License
 

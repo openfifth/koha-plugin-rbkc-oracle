@@ -4,8 +4,8 @@
     "previous_version": "0.0.1",
     "description": "A Koha plugin to manage finance integration with Oracle for RBKC",
     "plugin": {
-        "module": "Koha::Plugin::Com::PTFSEurope::Oracle",
-        "pm_path": "Koha/Plugin/Com/PTFSEurope/Oracle.pm"
+        "module": "Koha::Plugin::Com::OpenFifth::Oracle",
+        "pm_path": "Koha/Plugin/Com/OpenFifth/Oracle.pm"
     },
     "scripts": {
         "test": "prove t/",
@@ -19,14 +19,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/PTFS-Europe/koha-plugin-rbkc-oracle.git"
+        "url": "git+https://github.com/openfifth/koha-plugin-rbkc-oracle.git"
     },
-    "author": "PTFS Europe Ltd",
+    "author": "Open Fifth",
     "license": "GPL-3.0",
     "bugs": {
-        "url": "https://github.com/PTFS-Europe/koha-plugin-rbkc-oracle/issues"
+        "url": "https://github.com/openfifth/koha-plugin-rbkc-oracle/issues"
     },
-    "homepage": "https://github.com/PTFS-Europe/koha-plugin-rbkc-oracle#readme",
+    "homepage": "https://github.com/openfifth/koha-plugin-rbkc-oracle#readme",
     "devDependencies": {
         "json-maybexs": "^1.0.0",
         "path-tiny": "^1.0.0",

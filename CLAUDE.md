@@ -10,13 +10,13 @@ This is a Koha plugin for Oracle finance integration at RBKC (Royal Borough of K
 
 ### Plugin Structure
 
-- **Main plugin file**: `Koha/Plugin/Com/PTFSEurope/Oracle.pm` - Contains all plugin logic
-- **Templates**: `Koha/Plugin/Com/PTFSEurope/Oracle/` directory contains Template Toolkit files (.tt)
+- **Main plugin file**: `Koha/Plugin/Com/OpenFifth/Oracle.pm` - Contains all plugin logic
+- **Templates**: `Koha/Plugin/Com/OpenFifth/Oracle/` directory contains Template Toolkit files (.tt)
   - `configure.tt` - Plugin configuration interface
   - `report-step1.tt` - Date range selection for manual reports
   - `report-step2-html.tt` - HTML report output
   - `report-step2-txt.tt` - Text/CSV report output
-- **Output directory**: `Koha/Plugin/Com/PTFSEurope/Oracle/output/` - Local file storage
+- **Output directory**: `Koha/Plugin/Com/OpenFifth/Oracle/output/` - Local file storage
 
 ### Key Components
 
@@ -76,8 +76,8 @@ npm run release:major       # Version bump + tag + push for major release
 ### File Structure for Koha Plugin
 
 ```
-Koha/Plugin/Com/PTFSEurope/Oracle.pm     # Main plugin class
-Koha/Plugin/Com/PTFSEurope/Oracle/       # Template and output directory
+Koha/Plugin/Com/OpenFifth/Oracle.pm     # Main plugin class
+Koha/Plugin/Com/OpenFifth/Oracle/       # Template and output directory
 ├── configure.tt                         # Configuration interface
 ├── report-step1.tt                      # Report date selection
 ├── report-step2-html.tt                 # HTML report display

@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for semantic versioning workflow
 
 ### Changed
+- **REBRANDING**: Migrated from PTFS Europe to Open Fifth organization
+- **Plugin namespace**: Updated from `Koha::Plugin::Com::PTFSEurope::Oracle` to `Koha::Plugin::Com::OpenFifth::Oracle`
+- **Directory structure**: Moved from `PTFSEurope/` to `OpenFifth/` directory structure
+- **Repository URLs**: Updated all GitHub URLs to openfifth organization
+- **Author attribution**: Changed from 'PTFS Europe' to 'Open Fifth'
 - Modernized build process to use auto-release template integration
 - Updated package.json with proper plugin configuration and scripts
 - Enhanced cron job to handle empty invoice sets gracefully
