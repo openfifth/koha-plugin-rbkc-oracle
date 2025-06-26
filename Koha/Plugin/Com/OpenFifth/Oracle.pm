@@ -11,13 +11,14 @@ use File::Spec;
 use List::Util qw(min max);
 use Mojo::JSON qw{ decode_json };
 
-our $VERSION  = '0.0.21';
+our $VERSION = '0.0.22';
+
 our $metadata = {
     name => 'Oracle Finance Integration',
 
     author          => 'Open Fifth',
     date_authored   => '2024-11-15',
-    date_updated    => '2024-11-15',
+    date_updated    => '2025-06-26',
     minimum_version => '24.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
