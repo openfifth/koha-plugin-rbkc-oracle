@@ -1,4 +1,4 @@
-package Koha::Plugin::Com::PTFSEurope::Oracle;
+package Koha::Plugin::Com::OpenFifth::Oracle;
 
 use Modern::Perl;
 
@@ -15,7 +15,7 @@ our $VERSION  = '0.0.21';
 our $metadata = {
     name => 'Oracle Finance Integration',
 
-    author          => 'PTFS Europe',
+    author          => 'Open Fifth',
     date_authored   => '2024-11-15',
     date_updated    => '2024-11-15',
     minimum_version => '24.11.00.000',

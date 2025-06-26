@@ -8,14 +8,14 @@ use Path::Tiny;
 
 BEGIN {
     plan tests => 5;
-    use_ok('Koha::Plugin::Com::PTFSEurope::Oracle') || print "Bail out!\n";
+    use_ok('Koha::Plugin::Com::OpenFifth::Oracle') || print "Bail out!\n";
 }
 
-diag("Testing Koha::Plugin::Com::PTFSEurope::Oracle");
+diag("Testing Koha::Plugin::Com::OpenFifth::Oracle");
 
 # Test plugin instantiation
 my $plugin;
-lives_ok { $plugin = Koha::Plugin::Com::PTFSEurope::Oracle->new() } 'Plugin instantiation succeeds';
+lives_ok { $plugin = Koha::Plugin::Com::OpenFifth::Oracle->new() } 'Plugin instantiation succeeds';
 
 # Test that the plugin has the required methods
 can_ok($plugin, qw(configure cronjob_nightly report _generate_report _generate_filename));
@@ -31,7 +31,7 @@ SKIP: {
     ok($package_version, 'package.json has version');
     
     # Get plugin version from metadata
-    my $plugin_version = $plugin->{metadata}->{version} || $Koha::Plugin::Com::PTFSEurope::Oracle::VERSION;
+    my $plugin_version = $plugin->{metadata}->{version} || $Koha::Plugin::Com::OpenFifth::Oracle::VERSION;
     
     is($plugin_version, $package_version, 'Plugin version matches package.json version');
 }

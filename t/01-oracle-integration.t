@@ -6,10 +6,10 @@ use Test::Exception;
 
 BEGIN {
     plan tests => 8;
-    use_ok('Koha::Plugin::Com::PTFSEurope::Oracle') || print "Bail out!\n";
+    use_ok('Koha::Plugin::Com::OpenFifth::Oracle') || print "Bail out!\n";
 }
 
-my $plugin = Koha::Plugin::Com::PTFSEurope::Oracle->new();
+my $plugin = Koha::Plugin::Com::OpenFifth::Oracle->new();
 
 # Test fund mapping methods
 subtest 'Fund to cost center mapping' => sub {

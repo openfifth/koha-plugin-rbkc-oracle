@@ -14,7 +14,7 @@
 
 ### Method 1: KPZ File Installation (Recommended)
 
-1. Download the latest KPZ file from the [Releases page](https://github.com/PTFS-Europe/koha-plugin-rbkc-oracle/releases)
+1. Download the latest KPZ file from the [Releases page](https://github.com/openfifth/koha-plugin-rbkc-oracle/releases)
 
 2. In Koha staff interface:
    - Go to Home › Tools › Plugins
@@ -120,6 +120,6 @@ Check Koha logs for plugin-related errors:
 
 ### Support
 
-- Create issue on [GitHub](https://github.com/PTFS-Europe/koha-plugin-rbkc-oracle/issues)
-- Contact PTFS Europe for RBKC-specific support
+- Create issue on [GitHub](https://github.com/openfifth/koha-plugin-rbkc-oracle/issues)
+- Contact Open Fifth for RBKC-specific support
 - Check [CONTRIBUTING.md](../CONTRIBUTING.md) for development setup
