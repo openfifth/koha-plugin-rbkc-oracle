@@ -105,35 +105,28 @@ sub cronjob_nightly {
     my $start_date = $now->clone->subtract(days => ($today - $previous_day) % 7);
     my $end_date   = $now;
 
-    my $report = $self->_generate_report( $start_date, $end_date );
-    if ($report) {
-        my $filename = $self->_generate_filename();
+    my $report = $self->_generate_report($start_date, $end_date, 1);
+    return if !$report;
+    my $filename = $self->_generate_filename();
 
-        if ( $output eq 'upload' ) {
-            $transport->connect;
-            open my $fh, '<', \$report;
-            if ( $transport->file_upload( $fh, $filename ) ) {
-                close $fh;
-                return 1;
-            }
-            else {
-                # Deal with transport errors?
-                close $fh;
-                return 0;
-            }
-        }
-        else {
-            my $file_path =
-              File::Spec->catfile( $self->bundle_path, 'output', $filename );
-            open( my $fh, '>', $file_path )
-              or die "Unable to open $file_path: $!";
-            print $fh $report;
-            close($fh);
+    if ( $output eq 'upload' ) {
+        $transport->connect;
+        open my $fh, '<', \$report;
+        if ( $transport->upload_file( $fh, $filename ) ) {
+            close $fh;
             return 1;
+        } else {
+            # Deal with transport errors?
+            close $fh;
+            return 0;
         }
+    } else {
+        my $file_path = File::Spec->catfile($self->bundle_path, 'output', $filename);
+        open(my $fh, '>', $file_path) or die "Unable to open $file_path: $!";
+        print $fh $report;
+        close($fh);
+        return 1;
     }
-
-    return 1;
 }
 
 sub report {
@@ -210,7 +203,7 @@ sub report_step2 {
 }
 
 sub _generate_report {
-    my ( $self, $startdate, $enddate ) = @_;
+    my ( $self, $startdate, $enddate, $cron ) = @_;
 
     my $dbh   = C4::Context->dbh;
     my $where = { 'booksellerid.name' => { 'LIKE' => 'RBKC%' } };
@@ -231,6 +224,8 @@ sub _generate_report {
 
     my $invoices = Koha::Acquisition::Invoices->search( $where,
         { prefetch => [ 'booksellerid', 'aqorders' ] } );
+
+    return 0 if $invoices->count == 0 && $cron;
 
     my $results;
     my $invoice_count = 0;
