@@ -1,13 +1,17 @@
 #!/usr/bin/perl
 
 use Modern::Perl;
-use Test::More;
+use Test::More tests => 8;
 use Test::Exception;
+use Path::Tiny qw(path);
 
-BEGIN {
-    plan tests => 8;
-    use_ok('Koha::Plugin::Com::OpenFifth::Oracle') || print "Bail out!\n";
-}
+# Get the plugin directory path
+my $plugin_dir = $ENV{KOHA_PLUGIN_DIR} || '.';
+my $package_json_path = path($plugin_dir)->child('package.json');
+
+# Add plugin directory to @INC
+unshift @INC, $plugin_dir;
+use_ok('Koha::Plugin::Com::OpenFifth::Oracle') || print "Bail out!\n";
 
 my $plugin = Koha::Plugin::Com::OpenFifth::Oracle->new();
 
@@ -36,7 +40,7 @@ subtest 'Filename generation' => sub {
     
     my $filename = $plugin->_generate_filename();
     like($filename, qr/^KC_LB02_\d{14}\.txt$/, 'Filename follows correct pattern');
-    ok(length($filename) == 21, 'Filename has correct length');
+    is(length($filename), 26, 'Filename has correct length');
 };
 
 # Test cron parameter handling
