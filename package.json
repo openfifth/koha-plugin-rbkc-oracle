@@ -8,14 +8,12 @@
     "pm_path": "Koha/Plugin/Com/OpenFifth/Oracle.pm"
   },
   "scripts": {
-    "test": "prove t/",
-    "test:verbose": "prove -v t/",
-    "version:patch": "node increment_version.js patch",
-    "version:minor": "node increment_version.js minor",
-    "version:major": "node increment_version.js major",
-    "release:patch": "npm run version:patch && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags",
-    "release:minor": "npm run version:minor && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags",
-    "release:major": "npm run version:major && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin main --follow-tags"
+    "version:patch": "node increment_version.js patch | cat",
+    "version:minor": "node increment_version.js minor | cat",
+    "version:major": "node increment_version.js major | cat",
+    "release:patch": "node increment_version.js patch | cat && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin master --follow-tags",
+    "release:minor": "node increment_version.js minor | cat && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin master --follow-tags",
+    "release:major": "node increment_version.js major | cat && git add . && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && git push origin master --follow-tags"
   },
   "repository": {
     "type": "git",
@@ -27,9 +25,11 @@
     "url": "https://github.com/openfifth/koha-plugin-rbkc-oracle/issues"
   },
   "homepage": "https://github.com/openfifth/koha-plugin-rbkc-oracle#readme",
-  "devDependencies": {
-    "json-maybexs": "^1.0.0",
-    "path-tiny": "^1.0.0",
-    "test-exception": "^1.0.0"
-  }
+  "keywords": [
+    "koha",
+    "plugin",
+    "oracle",
+    "finance",
+    "integration"
+  ]
 }
