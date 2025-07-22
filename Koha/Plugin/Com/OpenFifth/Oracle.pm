@@ -218,7 +218,6 @@ sub report_step2 {
 sub _generate_report {
     my ( $self, $startdate, $enddate, $cron ) = @_;
 
-    my $dbh   = C4::Context->dbh;
     my $where = { 'booksellerid.name' => { 'LIKE' => 'RBKC%' } };
 
     my $dtf           = Koha::Database->new->schema->storage->datetime_parser;
