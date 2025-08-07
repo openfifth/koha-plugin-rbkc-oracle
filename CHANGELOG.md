@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Improve adjustment matching for split orders
+
+## [0.0.27] - 2024-12-XX
+
+### Fixed
+- Correct tax code for adjustments
+- Clean up superfluous database handle
+- Fix branch reference from 'master' to 'main'
+
+## [0.0.26] - 2024-12-XX
+
+### Fixed
+- Add fixed tax code for service charges
+
+## [0.0.25] - 2024-12-XX
+
+### Added
+- Invoice adjustments to Oracle report
+
+## [0.0.24] - 2024-12-XX
+
+### Added
+- package-lock.json for dependency management
+
+## [0.0.23] - 2024-12-XX
+
+### Changed
+- Fix tests and CI configuration
+- Use OpenFifth WCC Koha branch for testing
+- Use OpenFifth Koha branch for testing
+
+## [0.0.22] - 2024-11-XX
+
 ### Added
 - GitHub Actions workflow for automated testing against multiple Koha versions
 - Comprehensive testing framework with version synchronization tests
