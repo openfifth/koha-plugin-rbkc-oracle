@@ -286,9 +286,12 @@ sub _generate_report {
             } else {
                 $adj_budget_code = '';  # No budget info available
             }
-            
+
+            my $supplier_account = $self->_map_fund_to_supplier_account($adj_budget_code);
+            my $costcenter = $self->_map_fund_to_costcenter($adj_budget_code);
+           
             return "\n" . "GL" . ","
-              . $self->_map_fund_to_supplier_account($adj_budget_code) . ","
+              . $supplier_account . ","
               . $invoice->invoicenumber . ","
               . $adjustment_amount . ","
               . ","
@@ -296,9 +299,9 @@ sub _generate_report {
               . ","
               . ","
               . ","
+              . $self->_map_fund_to_analysis($adj_budget_code) . ","
               . ","
-              . ","
-              . $self->_map_fund_to_costcenter($adj_budget_code) . ","
+              . $costcenter . ","
               . $invoice->invoicenumber . ","
               . ","
               . ","
@@ -320,9 +323,10 @@ sub _generate_report {
         # Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
         my $invoice_total = 0;
         my $tax_amount = 0;
-        my $supplier_account;
-        my $costcenter;
         while ( my $line = $orders->next ) {
+            my $supplier_account = $self->_map_fund_to_supplier_account($line->budget->budget_code);
+            my $costcenter = $self->_map_fund_to_costcenter($line->budget->budget_code);
+
             my $unitprice = Koha::Number::Price->new( $line->unitprice_tax_included )->round * 100;
             my $quantity = $line->quantity || 1;
             $invoice_total = $invoice_total + ($unitprice * $quantity);
@@ -338,7 +342,7 @@ sub _generate_report {
             # Generate one GL line per quantity unit
             for my $qty_unit (1..$quantity) {
                 $lines .= "\n" . "GL" . ","
-                  . $self->_map_fund_to_supplier_account($line->budget->budget_code) . ","
+                  . $supplier_account . ","
                   . $invoice->invoicenumber . ","
                   . $unitprice . ","
                   . ","
@@ -346,9 +350,9 @@ sub _generate_report {
                   . ","
                   . ","
                   . ","
+                  . $self->_map_fund_to_analysis($line->budget->budget_code) . ","
                   . ","
-                  . ","
-                  . $self->_map_fund_to_costcenter($line->budget->budget_code) . ","
+                  . $costcenter . ","
                   . $invoice->invoicenumber . ","
                   . ","
                   . ","
@@ -372,8 +376,6 @@ sub _generate_report {
                 delete $order_adjustments{$current_ordernumber};
             }
 
-            $supplier_account = $self->_map_fund_to_supplier_account($line->budget->budget_code);
-            $costcenter = $self->_map_fund_to_costcenter($line->budget->budget_code);
         }
 
         # Add adjustments to invoice total
@@ -389,11 +391,11 @@ sub _generate_report {
           . $invoice->invoicenumber . ","
           . ( $invoice->closedate =~ s/-//gr ) . ","
           . $invoice_total . ","
-          . $tax_amount . ","
+          . ","
           . $invoice->invoicenumber . ","
-          . ( $invoice->shipmentdate =~ s/-//gr ) . ","
-          . $costcenter . ","
-          . $supplier_account . ","
+          . ","
+          . ","
+          . ","
           . ","
           . ","
           . $invoice->_result->booksellerid->invoiceprice->currency . ","
@@ -520,6 +522,11 @@ sub _map_fund_to_supplier_account {
     };
     my $return = defined( $map->{$fund} ) ? $map->{$fund} : 'UNMAPPED';
     return $return;
+}
+
+sub _map_fund_to_analysis {
+    my ( $self, $fund ) = @_;
+    return 'analysis';
 }
 
 1;

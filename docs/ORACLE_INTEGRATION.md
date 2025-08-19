@@ -14,27 +14,60 @@ The plugin generates three types of record lines in Oracle CSV format, all conta
 
 - **Purpose**: Summary record with total invoice count and amount
 - **Position**: First line in file
-- **Format**: `CT,{invoice_count},{total_amount},...`
+
+| Field | Content         | Description                        |
+| ----- | --------------- | ---------------------------------- |
+| 1     | CT              | Record type identifier             |
+| 2     | {invoice_count} | Total number of invoices           |
+| 3     | {total_amount}  | Negative sum of all invoice totals |
+| 4-24  | Empty           | Reserved fields                    |
 
 #### Accounts Payable (AP)
 
 - **Purpose**: One record per invoice with supplier details
-- **Format**: `AP,{supplier_number},{invoice_number},{close_date},{total_amount},,{invoice_number},,,,,,{currenct_code},,,,,,,,,,,{supplier_site_name}`
+
+| Field | Content              | Description                                                                            |
+| ----- | -------------------- | -------------------------------------------------------------------------------------- |
+| 1     | AP                   | Record type identifier                                                                 |
+| 2     | {supplier_number}    | Supplier account number                                                                |
+| 3     | {invoice_number}     | Invoice number                                                                         |
+| 4     | {close_date}         | Invoice close date (YYYYMMDD)                                                          |
+| 5     | {total_amount}       | Negative invoice total in pence                                                        |
+| 6     | Empty                | Reserved field                                                                         |
+| 7     | {invoice_number}     | Invoice reference (currently Koha invoicenumber, may refer to PO Number in the future) |
+| 8-12  | Empty                | Reserved fields                                                                        |
+| 13    | {currency_code}      | Currency code (e.g. GBP)                                                               |
+| 14-23 | Empty                | Reserved fields                                                                        |
+| 24    | {supplier_site_name} | Supplier site name                                                                     |
 
 #### General Ledger (GL)
 
 - **Purpose**: One record per order line quantity unit
-- **Format**: `GL,{supplier_account},{invoice_number},{unit_price},,{tax_code},,,,{analysis},,{costcenter},{invoice_number},...`
+
+| Field | Content            | Description                                                                            |
+| ----- | ------------------ | -------------------------------------------------------------------------------------- |
+| 1     | GL                 | Record type identifier                                                                 |
+| 2     | {supplier_account} | Mapped supplier account from fund                                                      |
+| 3     | {invoice_number}   | Invoice reference (currently Koha invoicenumber, may refer to PO Number in the future) |
+| 4     | {unit_price}       | Unit price in pence                                                                    |
+| 5     | Empty              | Reserved field                                                                         |
+| 6     | {tax_code}         | Tax code (P1/P2/P3)                                                                    |
+| 7-8   | Empty              | Reserved fields                                                                        |
+| 9     | {analysis}         | Analysis code from fund mapping                                                        |
+| 10    | Empty              | Reserved field                                                                         |
+| 11    | {costcenter}       | Cost center from fund mapping                                                          |
+| 12    | {invoice_number}   | Invoice number                                                                         |
+| 13-24 | Empty              | Reserved fields                                                                        |
 
 ### Example Output
 
 ```csv
 CT,2,-5000,,,,,,,,,,,,,,,,,,,,,
-AP,12345,INV001,20241201,-2500,500,INV001,20241201,E26315,4539,,,...
-GL,4539,INV001,2000,,P1,,,,,,,E26315,INV001,,,,,,,,,,,
-GL,4539,INV001,500,,P1,,,,,,,E26315,INV001,,,,,,,,,,,
-AP,12346,INV002,20241201,-2500,500,INV002,20241201,E26315,4539,,,...
-GL,4539,INV002,2500,,P1,,,,,,,E26315,INV002,,,,,,,,,,,
+AP,12345,INV001,20241201,-2500,,INV001,,,,,GBP,,,,,,,,,,,RBKC_SITE
+GL,4539,INV001,2000,,P1,,,,analysis,,E26315,INV001,,,,,,,,,,,
+GL,4539,INV001,500,,P1,,,,analysis,,E26315,INV001,,,,,,,,,,,
+AP,12346,INV002,20241201,-2500,,INV002,,,,,GBP,,,,,,,,,,,RBKC_SITE
+GL,4539,INV002,2500,,P1,,,,analysis,,E26315,INV002,,,,,,,,,,,
 ```
 
 ## Data Mapping
@@ -191,4 +224,3 @@ Example: `KC_LB02_20241201143052.txt`
 - Review fund code mappings
 - Check for unmapped funds in output
 - Validate Oracle cost center codes
-
