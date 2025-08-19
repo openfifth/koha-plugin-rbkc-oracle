@@ -8,20 +8,23 @@ This plugin exports Koha acquisition invoices to Oracle finance system format fo
 
 ### Record Types
 
-The plugin generates three types of records in Oracle CSV format:
+The plugin generates three types of record lines in Oracle CSV format, all containing 24 fields:
 
 #### Control Total (CT)
+
 - **Purpose**: Summary record with total invoice count and amount
 - **Position**: First line in file
 - **Format**: `CT,{invoice_count},{total_amount},...`
 
-#### Accounts Payable (AP) 
+#### Accounts Payable (AP)
+
 - **Purpose**: One record per invoice with supplier details
-- **Format**: `AP,{supplier_account},{invoice_number},{close_date},{total_amount},{tax_amount},...`
+- **Format**: `AP,{supplier_number},{invoice_number},{close_date},{total_amount},,{invoice_number},,,,,,{currenct_code},,,,,,,,,,,{supplier_site_name}`
 
 #### General Ledger (GL)
+
 - **Purpose**: One record per order line quantity unit
-- **Format**: `GL,{supplier_number},{invoice_number},{unit_price},,{tax_code},...`
+- **Format**: `GL,{supplier_account},{invoice_number},{unit_price},,{tax_code},,,,{analysis},,{costcenter},{invoice_number},...`
 
 ### Example Output
 
@@ -41,12 +44,14 @@ GL,4539,INV002,2500,,P1,,,,,,,E26315,INV002,,,,,,,,,,,
 The plugin maps Koha fund codes to Oracle cost centers and supplier numbers:
 
 #### Cost Centers
+
 - Most funds → `E26315` (default)
-- `KARC` → `E26311` 
+- `KARC` → `E26311`
 - `KERE` → `E26341`
 - `KHLS` → `E26330`
 
 #### Supplier Numbers
+
 - Most funds → `4539` (default)
 - `KERE` → `5190`
 - `KPER` → `4625`
@@ -54,8 +59,9 @@ The plugin maps Koha fund codes to Oracle cost centers and supplier numbers:
 ### Tax Code Mapping
 
 Based on `tax_rate_on_receiving`:
+
 - 20% → `P1`
-- 5% → `P2` 
+- 5% → `P2`
 - 0% → `P3`
 - Other → Empty
 
@@ -77,7 +83,7 @@ Based on `tax_rate_on_receiving`:
 ### Amount Calculations
 
 - **Unit Prices**: Converted to pence (× 100) and rounded
-- **Invoice Totals**: Sum of (unit price × quantity) for all lines  
+- **Invoice Totals**: Sum of (unit price × quantity) for all lines
 - **Tax Amounts**: Sum of tax values from all order lines
 - **Control Total**: Negative sum of all invoice totals
 
@@ -140,7 +146,7 @@ Example: `KC_LB02_20241201143052.txt`
 ### Adding Fund Codes
 
 1. Update `_map_fund_to_costcenter()` method
-2. Update `_map_fund_to_suppliernumber()` method  
+2. Update `_map_fund_to_suppliernumber()` method
 3. Add test cases for new mappings
 4. Document business justification
 
@@ -163,21 +169,26 @@ Example: `KC_LB02_20241201143052.txt`
 ### Common Issues
 
 **No output generated:**
+
 - Check supplier names start with "RBKC"
 - Verify invoices exist in date range
 - Confirm invoices have closed status
 
 **Incorrect amounts:**
+
 - Verify quantity handling in order lines
 - Check tax calculations on receiving
 - Confirm currency and rounding logic
 
 **Upload failures:**
+
 - Test file transport configuration
 - Check network connectivity
 - Verify authentication credentials
 
 **Mapping errors:**
+
 - Review fund code mappings
 - Check for unmapped funds in output
 - Validate Oracle cost center codes
+
