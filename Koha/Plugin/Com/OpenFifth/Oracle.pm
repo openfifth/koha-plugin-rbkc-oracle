@@ -10,6 +10,7 @@ use Koha::Number::Price;
 use File::Spec;
 use List::Util qw(min max);
 use Mojo::JSON qw{ decode_json };
+use Text::CSV;
 
 our $VERSION = '0.0.30';
 
@@ -239,9 +240,21 @@ sub _generate_report {
 
     return 0 if $invoices->count == 0 && $cron;
 
-    my $results       = "";
+    # Initialize Text::CSV for proper CSV formatting
+    my $csv = Text::CSV->new({
+        binary => 1,
+        eol => "\015\012",
+        sep_char => ",",
+        quote_char => '"',
+        always_quote => 0
+    });
+
+    my $results = "";
+    open my $fh, '>', \$results or die "Could not open scalar ref: $!";
+
     my $invoice_count = 0;
     my $overall_total = 0;
+    my @all_rows = ();  # Store all rows to add CT row at the beginning
     while ( my $invoice = $invoices->next ) {
         $invoice_count++;
         my $lines  = "";
@@ -270,8 +283,8 @@ sub _generate_report {
             }
         }
 
-        # Helper function to generate adjustment GL line
-        my $generate_adjustment_line = sub {
+        # Helper function to generate adjustment GL row
+        my $generate_adjustment_row = sub {
             my ($adjustment) = @_;
             my $adjustment_amount = Koha::Number::Price->new( $adjustment->adjustment )->round * 100;
             
@@ -290,34 +303,25 @@ sub _generate_report {
             my $supplier_account = $self->_map_fund_to_supplier_account($adj_budget_code);
             my $costcenter = $self->_map_fund_to_costcenter($adj_budget_code);
            
-            return "\n" . "GL" . ","
-              . $supplier_account . ","
-              . $invoice->invoicenumber . ","
-              . $adjustment_amount . ","
-              . ","
-              . "P3,"  # Fixed tax code for service charges
-              . ","
-              . ","
-              . ","
-              . $self->_map_fund_to_analysis($adj_budget_code) . ","
-              . ","
-              . $costcenter . ","
-              . $invoice->invoicenumber . ","
-              . ","
-              . ","
-              . ","
-              . ","
-              . ","
-              . ","
-              . ","
-              . ","
-              . ","
-              . ",";
+            return [
+                "GL",                                                    # 1
+                $supplier_account,                                       # 2
+                $invoice->invoicenumber,                                # 3
+                $adjustment_amount,                                      # 4
+                "",                                                     # 5
+                "P3",                                                   # 6 Fixed tax code for service charges
+                "", "",                                                 # 7-8
+                $self->_map_fund_to_analysis($adj_budget_code),         # 9
+                "",                                                     # 10
+                $costcenter,                                            # 11
+                $invoice->invoicenumber,                                # 12
+                "", "", "", "", "", "", "", "", "", "", "", ""         # 13-24
+            ];
         };
 
         # Add general adjustments (no line ID) at the top
         for my $adjustment (@general_adjustments) {
-            $lines .= $generate_adjustment_line->($adjustment);
+            push @all_rows, $generate_adjustment_row->($adjustment);
         }
 
         # Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
@@ -339,38 +343,29 @@ sub _generate_report {
               : $tax_rate_on_receiving == 0  ? 'P3'
               :                                '';
 
-            # Generate one GL line per quantity unit
+            # Generate one GL row per quantity unit
             for my $qty_unit (1..$quantity) {
-                $lines .= "\n" . "GL" . ","
-                  . $supplier_account . ","
-                  . $invoice->invoicenumber . ","
-                  . $unitprice . ","
-                  . ","
-                  . $tax_code . ","
-                  . ","
-                  . ","
-                  . ","
-                  . $self->_map_fund_to_analysis($line->budget->budget_code) . ","
-                  . ","
-                  . $costcenter . ","
-                  . $invoice->invoicenumber . ","
-                  . ","
-                  . ","
-                  . ","
-                  . ","
-                  . ","
-                  . ","
-                  . ","
-                  . ","
-                  . ","
-                  . ",";
+                push @all_rows, [
+                    "GL",                                               # 1
+                    $supplier_account,                                  # 2
+                    $invoice->invoicenumber,                           # 3
+                    $unitprice,                                        # 4
+                    "",                                                # 5
+                    $tax_code,                                         # 6
+                    "", "",                                            # 7-8
+                    $self->_map_fund_to_analysis($line->budget->budget_code), # 9
+                    "",                                                # 10
+                    $costcenter,                                       # 11
+                    $invoice->invoicenumber,                           # 12
+                    "", "", "", "", "", "", "", "", "", "", "", ""    # 13-24
+                ];
             }
 
             # Add any adjustments that reference this order
             my $current_ordernumber = $line->ordernumber;
             if (exists $order_adjustments{$current_ordernumber}) {
                 for my $adjustment (@{$order_adjustments{$current_ordernumber}}) {
-                    $lines .= $generate_adjustment_line->($adjustment);
+                    push @all_rows, $generate_adjustment_row->($adjustment);
                 }
                 # Remove processed adjustments to avoid duplicates
                 delete $order_adjustments{$current_ordernumber};
@@ -381,66 +376,44 @@ sub _generate_report {
         # Add adjustments to invoice total
         $invoice_total += $total_adjustments;
 
-        # Add 'Accounts Payable line'
+        # Add 'Accounts Payable row'
         my $supplier_number    = $invoice->_result->booksellerid->accountnumber;
         my $supplier_site_name = $invoice->_result->booksellerid->fax;
         $invoice_total = $invoice_total * -1;
         $overall_total = $overall_total + $invoice_total;
-        $results .= "\n" . "AP" . ","
-          . $supplier_number . ","
-          . $invoice->invoicenumber . ","
-          . ( $invoice->closedate =~ s/-//gr ) . ","
-          . $invoice_total . ","
-          . ","
-          . $invoice->invoicenumber . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . $invoice->_result->booksellerid->invoiceprice->currency . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . ","
-          . $supplier_site_name;
-        $results .= $lines;
+        
+        push @all_rows, [
+            "AP",                                                   # 1
+            $supplier_number,                                       # 2
+            $invoice->invoicenumber,                               # 3
+            ($invoice->closedate =~ s/-//gr),                      # 4
+            $invoice_total,                                        # 5
+            "",                                                    # 6
+            $invoice->invoicenumber,                               # 7
+            "", "", "", "", "",                                    # 8-12
+            $invoice->_result->booksellerid->invoiceprice->currency, # 13
+            "", "", "", "", "", "", "", "", "", "", "",           # 14-23
+            $supplier_site_name                                    # 24
+        ];
     }
 
-    # Add 'Control Total line'
+    # Add 'Control Total row' at the beginning
     $overall_total = $overall_total * -1;
-    $results = "CT" . ","
-      . $invoice_count . ","
-      . $overall_total . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . ","
-      . $results;
-
-      return $results;
+    my $ct_row = [
+        "CT",                                                       # 1
+        $invoice_count,                                             # 2
+        $overall_total,                                             # 3
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" # 4-24
+    ];
+    
+    # Print Control Total first, then all other rows
+    $csv->print($fh, $ct_row);
+    for my $row (@all_rows) {
+        $csv->print($fh, $row);
+    }
+    
+    close $fh;
+    return $results;
 }
 
 sub _generate_filename {
