@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 use Modern::Perl;
-use Test::More tests => 8;
+use Test::More tests => 9;
 use Test::Exception;
 use Path::Tiny qw(path);
 
@@ -25,13 +25,13 @@ subtest 'Fund to cost center mapping' => sub {
     is($plugin->_map_fund_to_costcenter('INVALID'), 'UNMAPPED', 'Invalid fund maps to UNMAPPED');
 };
 
-subtest 'Fund to supplier number mapping' => sub {
+subtest 'Fund to supplier account mapping' => sub {
     plan tests => 4;
     
-    is($plugin->_map_fund_to_suppliernumber('KAFI'), 4539, 'KAFI maps to correct supplier number');
-    is($plugin->_map_fund_to_suppliernumber('KERE'), 5190, 'KERE maps to correct supplier number');
-    is($plugin->_map_fund_to_suppliernumber('KPER'), 4625, 'KPER maps to correct supplier number');  
-    is($plugin->_map_fund_to_suppliernumber('INVALID'), 'UNMAPPED', 'Invalid fund maps to UNMAPPED');
+    is($plugin->_map_fund_to_supplier_account('KAFI'), 4539, 'KAFI maps to correct supplier account');
+    is($plugin->_map_fund_to_supplier_account('KERE'), 5190, 'KERE maps to correct supplier account');
+    is($plugin->_map_fund_to_supplier_account('KPER'), 4625, 'KPER maps to correct supplier account');  
+    is($plugin->_map_fund_to_supplier_account('INVALID'), 'UNMAPPED', 'Invalid fund maps to UNMAPPED');
 };
 
 # Test filename generation
@@ -98,6 +98,14 @@ subtest 'Configuration handling' => sub {
     
     my $retrieved = $plugin->retrieve_data('test_key');
     is($retrieved, 'test_value', 'Can retrieve stored configuration data');
+};
+
+# Test analysis field mapping
+subtest 'Fund to analysis mapping' => sub {
+    plan tests => 2;
+    
+    is($plugin->_map_fund_to_analysis('KAFI'), 'analysis', 'KAFI maps to analysis field');
+    is($plugin->_map_fund_to_analysis('KERE'), 'analysis', 'KERE maps to analysis field');
 };
 
 done_testing();
