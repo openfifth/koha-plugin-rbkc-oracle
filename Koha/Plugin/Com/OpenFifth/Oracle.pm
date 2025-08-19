@@ -219,6 +219,90 @@ sub report_step2 {
     print $template->output();
 }
 
+sub api_namespace {
+    my ( $self ) = @_;
+    
+    return 'oracle';
+}
+
+sub api_routes {
+    my ( $self, $args ) = @_;
+
+    my $spec = {
+        "/upload" => {
+            "post" => {
+                "x-mojo-to" => "Com::OpenFifth::Oracle::UploadController#upload",
+                "operationId" => "OracleUpload",
+                "tags" => ["oracle"],
+                "parameters" => [
+                    {
+                        "name" => "from",
+                        "in" => "formData",
+                        "description" => "Start date for report",
+                        "required" => true,
+                        "type" => "string"
+                    },
+                    {
+                        "name" => "to",
+                        "in" => "formData",
+                        "description" => "End date for report",
+                        "required" => true,
+                        "type" => "string"
+                    }
+                ],
+                "produces" => [
+                    "application/json"
+                ],
+                "responses" => {
+                    "200" => {
+                        "description" => "Upload successful",
+                        "schema" => {
+                            "type" => "object",
+                            "properties" => {
+                                "success" => {
+                                    "description" => "Success status",
+                                    "type" => "boolean"
+                                },
+                                "message" => {
+                                    "description" => "Success message",
+                                    "type" => "string"
+                                },
+                                "filename" => {
+                                    "description" => "Generated filename",
+                                    "type" => "string"
+                                }
+                            }
+                        }
+                    },
+                    "400" => {
+                        "description" => "Upload failed",
+                        "schema" => {
+                            "type" => "object",
+                            "properties" => {
+                                "success" => {
+                                    "description" => "Success status",
+                                    "type" => "boolean"
+                                },
+                                "message" => {
+                                    "description" => "Error message",
+                                    "type" => "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-koha-authorization" => {
+                    "permissions" => {
+                        "plugins" => "1"
+                    }
+                }
+            }
+        }
+    };
+
+    return $spec;
+}
+
 sub sftp_upload {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
@@ -509,6 +593,7 @@ sub _generate_report {
     close $fh;
     return $results;
 }
+
 
 sub _generate_filename {
     my ( $self, $args ) = @_;

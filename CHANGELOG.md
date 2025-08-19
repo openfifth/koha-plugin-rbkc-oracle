@@ -27,10 +27,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve user experience with better visual feedback
 
 ### Fixed
+- Resolve 403 permissions error for upload/save functionality
 - Improve adjustment matching for split orders
 - Proper handling of quotes, commas, and special characters in CSV output
 - Enhanced error handling with user-friendly messages
 - Better template parameter passing for UI functionality
+
+### Refactored
+- Replace tool method with proper API endpoint architecture
+- Implement dedicated `/api/v1/contrib/oracle/upload` endpoint for upload operations
+- Add OpenAPI 2.0 specification for upload endpoint documentation
+- Create UploadController class following Koha plugin API patterns
+- Remove unwanted tool page creation in favor of clean API interface
 
 ## [0.0.30] - 2025-08-19
 
