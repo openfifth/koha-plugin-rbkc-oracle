@@ -288,7 +288,7 @@ sub _generate_report {
             }
             
             return "\n" . "GL" . ","
-              . $self->_map_fund_to_suppliernumber($adj_budget_code) . ","
+              . $self->_map_fund_to_supplier_account($adj_budget_code) . ","
               . $invoice->invoicenumber . ","
               . $adjustment_amount . ","
               . ","
@@ -320,7 +320,7 @@ sub _generate_report {
         # Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
         my $invoice_total = 0;
         my $tax_amount = 0;
-        my $suppliernumber;
+        my $supplier_account;
         my $costcenter;
         while ( my $line = $orders->next ) {
             my $unitprice = Koha::Number::Price->new( $line->unitprice_tax_included )->round * 100;
@@ -338,7 +338,7 @@ sub _generate_report {
             # Generate one GL line per quantity unit
             for my $qty_unit (1..$quantity) {
                 $lines .= "\n" . "GL" . ","
-                  . $self->_map_fund_to_suppliernumber($line->budget->budget_code) . ","
+                  . $self->_map_fund_to_supplier_account($line->budget->budget_code) . ","
                   . $invoice->invoicenumber . ","
                   . $unitprice . ","
                   . ","
@@ -372,7 +372,7 @@ sub _generate_report {
                 delete $order_adjustments{$current_ordernumber};
             }
 
-            $suppliernumber = $self->_map_fund_to_suppliernumber($line->budget->budget_code);
+            $supplier_account = $self->_map_fund_to_supplier_account($line->budget->budget_code);
             $costcenter = $self->_map_fund_to_costcenter($line->budget->budget_code);
         }
 
@@ -380,10 +380,12 @@ sub _generate_report {
         $invoice_total += $total_adjustments;
 
         # Add 'Accounts Payable line'
+        my $supplier_number    = $invoice->_result->booksellerid->accountnumber;
+        my $supplier_site_name = $invoice->_result->booksellerid->fax;
         $invoice_total = $invoice_total * -1;
         $overall_total = $overall_total + $invoice_total;
         $results .= "\n" . "AP" . ","
-          . $invoice->_result->booksellerid->accountnumber . ","
+          . $supplier_number . ","
           . $invoice->invoicenumber . ","
           . ( $invoice->closedate =~ s/-//gr ) . ","
           . $invoice_total . ","
@@ -391,7 +393,7 @@ sub _generate_report {
           . $invoice->invoicenumber . ","
           . ( $invoice->shipmentdate =~ s/-//gr ) . ","
           . $costcenter . ","
-          . $suppliernumber . ","
+          . $supplier_account . ","
           . ","
           . ","
           . $invoice->_result->booksellerid->invoiceprice->currency . ","
@@ -405,7 +407,7 @@ sub _generate_report {
           . ","
           . ","
           . ","
-          . $invoice->_result->booksellerid->fax;
+          . $supplier_site_name;
         $results .= $lines;
     }
 
@@ -484,7 +486,7 @@ sub _map_fund_to_costcenter {
     return $return;
 }
 
-sub _map_fund_to_suppliernumber {
+sub _map_fund_to_supplier_account {
     my ( $self, $fund ) = @_;
     my $map = {
         KAFI   => 4539,
