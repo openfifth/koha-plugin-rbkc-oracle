@@ -10,6 +10,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Improve adjustment matching for split orders
 
+## [0.0.30] - 2025-08-19
+
+### Fixed
+- Update unit tests to reflect recent code changes
+- Test method rename from `_map_fund_to_suppliernumber` to `_map_fund_to_supplier_account`
+- Add test coverage for new `_map_fund_to_analysis` method
+
+## [0.0.29] - 2025-08-19
+
+### Added
+- Analysis field in Oracle integration format (field 9 in GL records)
+- New `_map_fund_to_analysis()` method returning 'analysis' for all funds
+
+### Changed
+- Renamed `_map_fund_to_suppliernumber()` to `_map_fund_to_supplier_account()` for clarity
+- Updated Oracle integration format with correct field positioning
+- Improved variable naming to better match content
+- Updated ORACLE_INTEGRATION.md documentation to match new 24-field specification
+
+### Fixed
+- Correct field positioning in AP and GL record types
+- Proper separation of supplier account vs supplier number fields
+
 ## [0.0.27] - 2024-12-XX
 
 ### Fixed
