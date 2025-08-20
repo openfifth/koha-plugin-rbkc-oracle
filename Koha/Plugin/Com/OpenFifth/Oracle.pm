@@ -239,14 +239,14 @@ sub api_routes {
                         "name" => "from",
                         "in" => "formData",
                         "description" => "Start date for report",
-                        "required" => true,
+                        "required" => Mojo::JSON::true,
                         "type" => "string"
                     },
                     {
                         "name" => "to",
                         "in" => "formData",
                         "description" => "End date for report",
-                        "required" => true,
+                        "required" => Mojo::JSON::true,
                         "type" => "string"
                     }
                 ],
