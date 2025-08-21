@@ -207,21 +207,21 @@ sub report_step2 {
     my $template = $self->get_template( { file => $templatefile } );
 
     $template->param(
-        date_ran  => dt_from_string(),
-        startdate => dt_from_string($startdate),
-        enddate   => dt_from_string($enddate),
-        results   => $results,
-        filename  => $self->_generate_filename(),
+        date_ran      => dt_from_string(),
+        startdate     => dt_from_string($startdate),
+        enddate       => dt_from_string($enddate),
+        results       => $results,
+        filename      => $self->_generate_filename(),
         output_config => $self->retrieve_data('output'),
-        CLASS     => ref($self),
+        CLASS         => ref($self),
     );
 
     print $template->output();
 }
 
 sub api_namespace {
-    my ( $self ) = @_;
-    
+    my ($self) = @_;
+
     return 'oracle';
 }
 
@@ -231,61 +231,60 @@ sub api_routes {
     my $spec = {
         "/upload" => {
             "post" => {
-                "x-mojo-to" => "Com::OpenFifth::Oracle::UploadController#upload",
+                "x-mojo-to" =>
+                  "Com::OpenFifth::Oracle::UploadController#upload",
                 "operationId" => "OracleUpload",
-                "tags" => ["oracle"],
-                "parameters" => [
+                "tags"        => ["oracle"],
+                "parameters"  => [
                     {
-                        "name" => "from",
-                        "in" => "formData",
+                        "name"        => "from",
+                        "in"          => "formData",
                         "description" => "Start date for report",
-                        "required" => Mojo::JSON::true,
-                        "type" => "string"
+                        "required"    => Mojo::JSON::true,
+                        "type"        => "string"
                     },
                     {
-                        "name" => "to",
-                        "in" => "formData",
+                        "name"        => "to",
+                        "in"          => "formData",
                         "description" => "End date for report",
-                        "required" => Mojo::JSON::true,
-                        "type" => "string"
+                        "required"    => Mojo::JSON::true,
+                        "type"        => "string"
                     }
                 ],
-                "produces" => [
-                    "application/json"
-                ],
+                "produces"  => ["application/json"],
                 "responses" => {
                     "200" => {
                         "description" => "Upload successful",
-                        "schema" => {
-                            "type" => "object",
+                        "schema"      => {
+                            "type"       => "object",
                             "properties" => {
                                 "success" => {
                                     "description" => "Success status",
-                                    "type" => "boolean"
+                                    "type"        => "boolean"
                                 },
                                 "message" => {
                                     "description" => "Success message",
-                                    "type" => "string"
+                                    "type"        => "string"
                                 },
                                 "filename" => {
                                     "description" => "Generated filename",
-                                    "type" => "string"
+                                    "type"        => "string"
                                 }
                             }
                         }
                     },
                     "400" => {
                         "description" => "Upload failed",
-                        "schema" => {
-                            "type" => "object",
+                        "schema"      => {
+                            "type"       => "object",
                             "properties" => {
                                 "success" => {
                                     "description" => "Success status",
-                                    "type" => "boolean"
+                                    "type"        => "boolean"
                                 },
                                 "message" => {
                                     "description" => "Error message",
-                                    "type" => "string"
+                                    "type"        => "string"
                                 }
                             }
                         }
@@ -325,20 +324,23 @@ sub sftp_upload {
 
     # Check output configuration - if set to upload, use transport
     my $output = $self->retrieve_data('output');
-    
-    if ($output eq 'upload') {
+
+    if ( $output eq 'upload' ) {
+
         # Get transport configuration
-        my $transport = Koha::File::Transports->find( $self->retrieve_data('transport_server') );
+        my $transport = Koha::File::Transports->find(
+            $self->retrieve_data('transport_server') );
 
         unless ($transport) {
             print $cgi->header('application/json');
-            print '{"success": false, "message": "No SFTP transport configured"}';
+            print
+              '{"success": false, "message": "No SFTP transport configured"}';
             return;
         }
 
         # Generate report
         my $filename = $self->_generate_filename();
-        my $report = $self->_generate_report( $startdate, $enddate );
+        my $report   = $self->_generate_report( $startdate, $enddate );
 
         unless ($report) {
             print $cgi->header('application/json');
@@ -355,41 +357,52 @@ sub sftp_upload {
 
             if ($upload_result) {
                 print $cgi->header('application/json');
-                print '{"success": true, "message": "File uploaded successfully to SFTP server", "filename": "' . $filename . '"}';
-            } else {
+                print
+'{"success": true, "message": "File uploaded successfully to SFTP server", "filename": "'
+                  . $filename . '"}';
+            }
+            else {
                 print $cgi->header('application/json');
-                print '{"success": false, "message": "Failed to upload file to SFTP server"}';
+                print
+'{"success": false, "message": "Failed to upload file to SFTP server"}';
             }
         };
 
         if ($@) {
             print $cgi->header('application/json');
-            print '{"success": false, "message": "SFTP upload error: ' . $@ . '"}';
+            print '{"success": false, "message": "SFTP upload error: ' . $@
+              . '"}';
         }
-    } else {
+    }
+    else {
         # Save to local file
         my $filename = $self->_generate_filename();
-        my $report = $self->_generate_report( $startdate, $enddate );
-        
+        my $report   = $self->_generate_report( $startdate, $enddate );
+
         unless ($report) {
             print $cgi->header('application/json');
             print '{"success": false, "message": "Failed to generate report"}';
             return;
         }
-        
-        my $file_path = File::Spec->catfile( $self->bundle_path, 'output', $filename );
+
+        my $file_path =
+          File::Spec->catfile( $self->bundle_path, 'output', $filename );
         eval {
-            open( my $fh, '>', $file_path ) or die "Unable to open $file_path: $!";
+            open( my $fh, '>', $file_path )
+              or die "Unable to open $file_path: $!";
             print $fh $report;
             close($fh);
-            
+
             print $cgi->header('application/json');
-            print '{"success": true, "message": "File saved successfully to server", "filename": "' . $filename . '"}';
+            print
+'{"success": true, "message": "File saved successfully to server", "filename": "'
+              . $filename . '"}';
         };
-        
+
         if ($@) {
             print $cgi->header('application/json');
-            print '{"success": false, "message": "Error saving file: ' . $@ . '"}';
+            print '{"success": false, "message": "Error saving file: ' . $@
+              . '"}';
         }
     }
 }
@@ -414,48 +427,56 @@ sub _generate_report {
     }
 
     my $invoices = Koha::Acquisition::Invoices->search( $where,
-        { prefetch => [ 'booksellerid', 'aqorders', 'aqinvoice_adjustments' ] } );
+        { prefetch => [ 'booksellerid', 'aqorders', 'aqinvoice_adjustments' ] }
+    );
 
     return 0 if $invoices->count == 0 && $cron;
 
     # Initialize Text::CSV for proper CSV formatting
-    my $csv = Text::CSV->new({
-        binary => 1,
-        eol => "\015\012",
-        sep_char => ",",
-        quote_char => '"',
-        always_quote => 0
-    });
+    my $csv = Text::CSV->new(
+        {
+            binary       => 1,
+            eol          => "\015\012",
+            sep_char     => ",",
+            quote_char   => '"',
+            always_quote => 0
+        }
+    );
 
     my $results = "";
     open my $fh, '>', \$results or die "Could not open scalar ref: $!";
 
     my $invoice_count = 0;
     my $overall_total = 0;
-    my @all_rows = ();  # Store all rows to add CT row at the beginning
+    my @all_rows      = ();    # Store all rows to add CT row at the beginning
     while ( my $invoice = $invoices->next ) {
         $invoice_count++;
         my $lines  = "";
         my $orders = $invoice->_result->aqorders;
 
         # Collect and categorize adjustments first
-        my $adjustments = $invoice->_result->aqinvoice_adjustments;
-        my $total_adjustments = 0;
+        my $adjustments         = $invoice->_result->aqinvoice_adjustments;
+        my $total_adjustments   = 0;
         my @general_adjustments = ();    # Adjustments without order references
-        my %order_adjustments = ();      # Adjustments with order numbers, keyed by ordernumber
-        
+        my %order_adjustments =
+          ();    # Adjustments with order numbers, keyed by ordernumber
+
         while ( my $adjustment = $adjustments->next ) {
-            my $adjustment_amount = Koha::Number::Price->new( $adjustment->adjustment )->round * 100;
+            my $adjustment_amount =
+              Koha::Number::Price->new( $adjustment->adjustment )->round * 100;
             $total_adjustments += $adjustment_amount;
-            
-            # Determine which order this adjustment applies to from the note field
-            my $adjustment_note = $adjustment->note || '';
+
+          # Determine which order this adjustment applies to from the note field
+            my $adjustment_note        = $adjustment->note || '';
             my $adjustment_ordernumber = '';
-            if ($adjustment_note =~ /Order #(\d+)/) {
+            if ( $adjustment_note =~ /Order #(\d+)/ ) {
                 $adjustment_ordernumber = $1;
-                # Store adjustment for later insertion after the corresponding order
-                push @{$order_adjustments{$adjustment_ordernumber}}, $adjustment;
-            } else {
+
+            # Store adjustment for later insertion after the corresponding order
+                push @{ $order_adjustments{$adjustment_ordernumber} },
+                  $adjustment;
+            }
+            else {
                 # Store general adjustment for insertion at the top
                 push @general_adjustments, $adjustment;
             }
@@ -464,36 +485,41 @@ sub _generate_report {
         # Helper function to generate adjustment GL row
         my $generate_adjustment_row = sub {
             my ($adjustment) = @_;
-            my $adjustment_amount = Koha::Number::Price->new( $adjustment->adjustment )->round * 100;
-            
-            # Use the adjustment's budget if available, otherwise fallback to first order's budget
+            my $adjustment_amount =
+              Koha::Number::Price->new( $adjustment->adjustment )->round * 100;
+
+# Use the adjustment's budget if available, otherwise fallback to first order's budget
             my $adj_budget_code;
-            if ($adjustment->budget_id) {
-                my $adj_fund = Koha::Acquisition::Funds->find($adjustment->budget_id);
+            if ( $adjustment->budget_id ) {
+                my $adj_fund =
+                  Koha::Acquisition::Funds->find( $adjustment->budget_id );
                 $adj_budget_code = $adj_fund ? $adj_fund->budget_code : '';
-            } elsif ($orders->count > 0) {
-                $orders->reset;  # Reset iterator to access first element
+            }
+            elsif ( $orders->count > 0 ) {
+                $orders->reset;    # Reset iterator to access first element
                 $adj_budget_code = $orders->first->budget->budget_code;
-            } else {
-                $adj_budget_code = '';  # No budget info available
+            }
+            else {
+                $adj_budget_code = '';    # No budget info available
             }
 
-            my $supplier_account = $self->_map_fund_to_supplier_account($adj_budget_code);
+            my $supplier_account =
+              $self->_map_fund_to_supplier_account($adj_budget_code);
             my $costcenter = $self->_map_fund_to_costcenter($adj_budget_code);
-           
+
             return [
-                "GL",                                                    # 1
-                $supplier_account,                                       # 2
-                $invoice->invoicenumber,                                # 3
-                $adjustment_amount,                                      # 4
-                "",                                                     # 5
-                "P3",                                                   # 6 Fixed tax code for service charges
-                "", "",                                                 # 7-8
-                $self->_map_fund_to_analysis($adj_budget_code),         # 9
-                "",                                                     # 10
-                $costcenter,                                            # 11
-                $invoice->invoicenumber,                                # 12
-                "", "", "", "", "", "", "", "", "", "", "", ""         # 13-24
+                "GL",                     # 1
+                $supplier_account,        # 2
+                $invoice->invoicenumber,  # 3
+                $adjustment_amount,       # 4
+                "",                       # 5
+                "P3",                     # 6 Fixed tax code for service charges
+                "", "",                   # 7-8
+                $self->_map_fund_to_analysis($adj_budget_code),    # 9
+                "",                                                # 10
+                $costcenter,                                       # 11
+                $invoice->invoicenumber,                           # 12
+                "", "", "", "", "", "", "", "", "", "", "", ""     # 13-24
             ];
         };
 
@@ -502,17 +528,23 @@ sub _generate_report {
             push @all_rows, $generate_adjustment_row->($adjustment);
         }
 
-        # Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
+# Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
         my $invoice_total = 0;
-        my $tax_amount = 0;
+        my $tax_amount    = 0;
         while ( my $line = $orders->next ) {
-            my $supplier_account = $self->_map_fund_to_supplier_account($line->budget->budget_code);
-            my $costcenter = $self->_map_fund_to_costcenter($line->budget->budget_code);
+            my $supplier_account = $self->_map_fund_to_supplier_account(
+                $line->budget->budget_code );
+            my $costcenter =
+              $self->_map_fund_to_costcenter( $line->budget->budget_code );
 
-            my $unitprice = Koha::Number::Price->new( $line->unitprice_tax_included )->round * 100;
+            my $unitprice =
+              Koha::Number::Price->new( $line->unitprice_tax_included )
+              ->round * 100;
             my $quantity = $line->quantity || 1;
-            $invoice_total = $invoice_total + ($unitprice * $quantity);
-            my $tax_value_on_receiving = Koha::Number::Price->new( $line->tax_value_on_receiving )->round * 100;
+            $invoice_total = $invoice_total + ( $unitprice * $quantity );
+            my $tax_value_on_receiving =
+              Koha::Number::Price->new( $line->tax_value_on_receiving )
+              ->round * 100;
             $tax_amount = $tax_amount + $tax_value_on_receiving;
             my $tax_rate_on_receiving = $line->tax_rate_on_receiving * 100;
             my $tax_code =
@@ -522,29 +554,33 @@ sub _generate_report {
               :                                '';
 
             # Generate one GL row per quantity unit
-            for my $qty_unit (1..$quantity) {
+            for my $qty_unit ( 1 .. $quantity ) {
                 push @all_rows, [
-                    "GL",                                               # 1
-                    $supplier_account,                                  # 2
-                    $invoice->invoicenumber,                           # 3
-                    $unitprice,                                        # 4
-                    "",                                                # 5
-                    $tax_code,                                         # 6
-                    "", "",                                            # 7-8
-                    $self->_map_fund_to_analysis($line->budget->budget_code), # 9
-                    "",                                                # 10
-                    $costcenter,                                       # 11
-                    $invoice->invoicenumber,                           # 12
+                    "GL",                                             # 1
+                    $supplier_account,                                # 2
+                    $invoice->invoicenumber,                          # 3
+                    $unitprice,                                       # 4
+                    "",                                               # 5
+                    $tax_code,                                        # 6
+                    "", "",                                           # 7-8
+                    $self->_map_fund_to_analysis( $line->budget->budget_code )
+                    ,                                                 # 9
+                    "",                                               # 10
+                    $costcenter,                                      # 11
+                    $invoice->invoicenumber,                          # 12
                     "", "", "", "", "", "", "", "", "", "", "", ""    # 13-24
                 ];
             }
 
             # Add any adjustments that reference this order
             my $current_ordernumber = $line->ordernumber;
-            if (exists $order_adjustments{$current_ordernumber}) {
-                for my $adjustment (@{$order_adjustments{$current_ordernumber}}) {
+            if ( exists $order_adjustments{$current_ordernumber} ) {
+                for my $adjustment (
+                    @{ $order_adjustments{$current_ordernumber} } )
+                {
                     push @all_rows, $generate_adjustment_row->($adjustment);
                 }
+
                 # Remove processed adjustments to avoid duplicates
                 delete $order_adjustments{$current_ordernumber};
             }
@@ -559,41 +595,41 @@ sub _generate_report {
         my $supplier_site_name = $invoice->_result->booksellerid->fax;
         $invoice_total = $invoice_total * -1;
         $overall_total = $overall_total + $invoice_total;
-        
+
         push @all_rows, [
-            "AP",                                                   # 1
-            $supplier_number,                                       # 2
-            $invoice->invoicenumber,                               # 3
-            ($invoice->closedate =~ s/-//gr),                      # 4
-            $invoice_total,                                        # 5
-            "",                                                    # 6
-            $invoice->invoicenumber,                               # 7
-            "", "", "", "", "",                                    # 8-12
-            $invoice->_result->booksellerid->invoiceprice->currency, # 13
-            "", "", "", "", "", "", "", "", "", "", "",           # 14-23
-            $supplier_site_name                                    # 24
+            "AP",                                                       # 1
+            $supplier_number,                                           # 2
+            $invoice->invoicenumber,                                    # 3
+            ( $invoice->closedate =~ s/-//gr ),                         # 4
+            $invoice_total,                                             # 5
+            "",                                                         # 6
+            $invoice->invoicenumber,                                    # 7
+            "", "", "", "", "",                                         # 8-12
+            $invoice->_result->booksellerid->invoiceprice->currency,    # 13
+            "", "", "", "", "", "", "", "", "", "",                     # 14-23
+            $supplier_site_name                                         # 24
         ];
     }
 
     # Add 'Control Total row' at the beginning
     $overall_total = $overall_total * -1;
     my $ct_row = [
-        "CT",                                                       # 1
-        $invoice_count,                                             # 2
-        $overall_total,                                             # 3
-        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" # 4-24
+        "CT",              # 1
+        $invoice_count,    # 2
+        $overall_total,    # 3
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", ""         # 4-24
     ];
-    
+
     # Print Control Total first, then all other rows
-    $csv->print($fh, $ct_row);
+    $csv->print( $fh, $ct_row );
     for my $row (@all_rows) {
-        $csv->print($fh, $row);
+        $csv->print( $fh, $row );
     }
-    
+
     close $fh;
     return $results;
 }
-
 
 sub _generate_filename {
     my ( $self, $args ) = @_;
