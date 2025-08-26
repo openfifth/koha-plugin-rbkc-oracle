@@ -52,12 +52,12 @@ The plugin generates three types of record lines in Oracle CSV format, all conta
 | 4     | {unit_price}       | Unit price in pence                                                                    |
 | 5     | Empty              | Reserved field                                                                         |
 | 6     | {tax_code}         | Tax code (P1/P2/P3)                                                                    |
-| 7-8   | Empty              | Reserved fields                                                                        |
-| 9     | {analysis}         | Analysis code from fund mapping                                                        |
-| 10    | Empty              | Reserved field                                                                         |
-| 11    | {costcenter}       | Cost center from fund mapping                                                          |
-| 12    | {invoice_number}   | Invoice number                                                                         |
-| 13-24 | Empty              | Reserved fields                                                                        |
+| 7-9   | Empty              | Reserved fields                                                                        |
+| 10    | {analysis}         | Analysis code from fund mapping                                                        |
+| 11    | Empty              | Reserved field                                                                         |
+| 12    | {costcenter}       | Cost center from fund mapping                                                          |
+| 13    | {invoice_number}   | Invoice number                                                                         |
+| 14-24 | Empty              | Reserved fields                                                                        |
 
 ### Example Output
 
