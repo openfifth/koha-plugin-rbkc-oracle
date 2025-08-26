@@ -531,7 +531,7 @@ sub _generate_report {
             push @invoice_gl_rows, $generate_adjustment_row->($adjustment);
         }
 
-        # Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
+# Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
         my $invoice_total = 0;
         my $tax_amount    = 0;
         while ( my $line = $orders->next ) {
@@ -559,19 +559,19 @@ sub _generate_report {
             # Generate one GL row per quantity unit
             for my $qty_unit ( 1 .. $quantity ) {
                 push @invoice_gl_rows, [
-                    "GL",                                             # 1
-                    $supplier_account,                                # 2
-                    $invoice->invoicenumber,                          # 3
-                    $unitprice,                                       # 4
-                    "",                                               # 5
-                    $tax_code,                                        # 6
-                    "", "",                                           # 7-8
+                    "GL",                                         # 1
+                    $supplier_account,                            # 2
+                    $invoice->invoicenumber,                      # 3
+                    $unitprice,                                   # 4
+                    "",                                           # 5
+                    $tax_code,                                    # 6
+                    "", "", "",                                   # 7-9
                     $self->_map_fund_to_analysis( $line->budget->budget_code )
-                    ,                                                 # 9
-                    "",                                               # 10
-                    $costcenter,                                      # 11
-                    $invoice->invoicenumber,                          # 12
-                    "", "", "", "", "", "", "", "", "", "", "", ""    # 13-24
+                    ,                                             # 10
+                    "",                                           # 11
+                    $costcenter,                                  # 12
+                    $invoice->invoicenumber,                      # 13
+                    "", "", "", "", "", "", "", "", "", "", ""    # 14-24
                 ];
             }
 
@@ -581,7 +581,8 @@ sub _generate_report {
                 for my $adjustment (
                     @{ $order_adjustments{$current_ordernumber} } )
                 {
-                    push @invoice_gl_rows, $generate_adjustment_row->($adjustment);
+                    push @invoice_gl_rows,
+                      $generate_adjustment_row->($adjustment);
                 }
 
                 # Remove processed adjustments to avoid duplicates
