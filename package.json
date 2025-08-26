@@ -1,7 +1,7 @@
 {
   "name": "koha-plugin-rbkc-oracle",
-  "version": "0.0.34",
-  "previous_version": "0.0.33",
+  "version": "0.0.35",
+  "previous_version": "0.0.34",
   "description": "A Koha plugin to manage finance integration with Oracle for RBKC",
   "plugin": {
     "module": "Koha::Plugin::Com::OpenFifth::Oracle",
