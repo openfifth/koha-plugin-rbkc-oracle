@@ -523,12 +523,15 @@ sub _generate_report {
             ];
         };
 
+        # Collect GL lines for this invoice in a temporary array
+        my @invoice_gl_rows = ();
+
         # Add general adjustments (no line ID) at the top
         for my $adjustment (@general_adjustments) {
-            push @all_rows, $generate_adjustment_row->($adjustment);
+            push @invoice_gl_rows, $generate_adjustment_row->($adjustment);
         }
 
-# Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
+        # Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
         my $invoice_total = 0;
         my $tax_amount    = 0;
         while ( my $line = $orders->next ) {
@@ -555,7 +558,7 @@ sub _generate_report {
 
             # Generate one GL row per quantity unit
             for my $qty_unit ( 1 .. $quantity ) {
-                push @all_rows, [
+                push @invoice_gl_rows, [
                     "GL",                                             # 1
                     $supplier_account,                                # 2
                     $invoice->invoicenumber,                          # 3
@@ -578,7 +581,7 @@ sub _generate_report {
                 for my $adjustment (
                     @{ $order_adjustments{$current_ordernumber} } )
                 {
-                    push @all_rows, $generate_adjustment_row->($adjustment);
+                    push @invoice_gl_rows, $generate_adjustment_row->($adjustment);
                 }
 
                 # Remove processed adjustments to avoid duplicates
@@ -590,7 +593,7 @@ sub _generate_report {
         # Add adjustments to invoice total
         $invoice_total += $total_adjustments;
 
-        # Add 'Accounts Payable row'
+        # Add 'Accounts Payable row' FIRST
         my $supplier_number    = $invoice->_result->booksellerid->accountnumber;
         my $supplier_site_name = $invoice->_result->booksellerid->fax;
         $invoice_total = $invoice_total * -1;
@@ -609,6 +612,11 @@ sub _generate_report {
             "", "", "", "", "", "", "", "", "", "",                     # 14-23
             $supplier_site_name                                         # 24
         ];
+
+        # Now add all GL rows for this invoice
+        for my $gl_row (@invoice_gl_rows) {
+            push @all_rows, $gl_row;
+        }
     }
 
     # Add 'Control Total row' at the beginning

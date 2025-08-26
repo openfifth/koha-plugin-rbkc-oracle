@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Resolve 403 permissions error for upload/save functionality
+- Fix line ordering bug where AP lines were appearing after GL lines instead of before
 - Improve adjustment matching for split orders
 - Proper handling of quotes, commas, and special characters in CSV output
 - Enhanced error handling with user-friendly messages
