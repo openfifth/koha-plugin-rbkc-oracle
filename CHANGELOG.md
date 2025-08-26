@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix line ordering bug where AP lines were appearing after GL lines instead of before
+
+## [0.0.35] - 2025-08-26
+
+_No changes - accidental release tag._
+
+## [0.0.34] - 2025-08-21
+
+### Fixed
+- Fix field miscount for GL records
+- Prevent wasteful GitHub Actions runs
+
+## [0.0.33] - 2025-08-20
+
+### Fixed
+- Resolve 'true' error using Mojo::JSON->true instead of literal 'true' string
+
+## [0.0.32] - 2025-08-19
+
+### Fixed
+- Resolve 403 permissions error for upload/save functionality by adding API endpoint
+
+### Refactored
+- Replace tool method with proper API endpoint architecture
+- Implement dedicated `/api/v1/contrib/oracle/upload` endpoint for upload operations
+- Add OpenAPI 2.0 specification for upload endpoint documentation
+- Create UploadController class following Koha plugin API patterns
+- Remove unwanted tool page creation in favor of clean API interface
+
+## [0.0.31] - 2025-08-19
+
 ### Added
 - Text::CSV integration for proper CSV formatting and validation
 - Robust CSV generation with correct escaping of special characters
@@ -27,19 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve user experience with better visual feedback
 
 ### Fixed
-- Resolve 403 permissions error for upload/save functionality
-- Fix line ordering bug where AP lines were appearing after GL lines instead of before
 - Improve adjustment matching for split orders
 - Proper handling of quotes, commas, and special characters in CSV output
 - Enhanced error handling with user-friendly messages
 - Better template parameter passing for UI functionality
-
-### Refactored
-- Replace tool method with proper API endpoint architecture
-- Implement dedicated `/api/v1/contrib/oracle/upload` endpoint for upload operations
-- Add OpenAPI 2.0 specification for upload endpoint documentation
-- Create UploadController class following Koha plugin API patterns
-- Remove unwanted tool page creation in favor of clean API interface
 
 ## [0.0.30] - 2025-08-19
 
