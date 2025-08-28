@@ -514,12 +514,12 @@ sub _generate_report {
                 $adjustment_amount,       # 4
                 "",                       # 5
                 "P3",                     # 6 Fixed tax code for service charges
-                "", "",                   # 7-8
-                $self->_map_fund_to_analysis($adj_budget_code),    # 9
-                "",                                                # 10
-                $costcenter,                                       # 11
-                $invoice->invoicenumber,                           # 12
-                "", "", "", "", "", "", "", "", "", "", "", ""     # 13-24
+                "", "", "",               # 7-9
+                $self->_map_fund_to_analysis($adj_budget_code),    # 10
+                "",                                                # 11
+                $costcenter,                                       # 12
+                $invoice->invoicenumber,                           # 13
+                "", "", "", "", "", "", "", "", "", "", ""         # 14-24
             ];
         };
 
