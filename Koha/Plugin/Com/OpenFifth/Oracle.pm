@@ -540,11 +540,15 @@ sub _generate_report {
             my $costcenter =
               $self->_map_fund_to_costcenter( $line->budget->budget_code );
 
-            my $unitprice =
+            my $unitprice_tax_included =
               Koha::Number::Price->new( $line->unitprice_tax_included )
               ->round * 100;
+            my $unitprice_tax_excluded =
+              Koha::Number::Price->new( $line->unitprice_tax_excluded )
+              ->round * 100;
             my $quantity = $line->quantity || 1;
-            $invoice_total = $invoice_total + ( $unitprice * $quantity );
+            $invoice_total =
+              $invoice_total + ( $unitprice_tac_excluded * $quantity );
             my $tax_value_on_receiving =
               Koha::Number::Price->new( $line->tax_value_on_receiving )
               ->round * 100;
@@ -562,7 +566,7 @@ sub _generate_report {
                     "GL",                                         # 1
                     $supplier_account,                            # 2
                     $invoice->invoicenumber,                      # 3
-                    $unitprice,                                   # 4
+                    $unitprice_tax_included,                      # 4
                     "",                                           # 5
                     $tax_code,                                    # 6
                     "", "", "",                                   # 7-9
