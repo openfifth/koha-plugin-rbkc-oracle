@@ -548,7 +548,7 @@ sub _generate_report {
               ->round * 100;
             my $quantity = $line->quantity || 1;
             $invoice_total =
-              $invoice_total + ( $unitprice_tax_excluded * $quantity );
+              $invoice_total + ( $unitprice_tax_included * $quantity );
             my $tax_value_on_receiving =
               Koha::Number::Price->new( $line->tax_value_on_receiving )
               ->round * 100;
@@ -566,7 +566,7 @@ sub _generate_report {
                     "GL",                                         # 1
                     $supplier_account,                            # 2
                     $invoice->invoicenumber,                      # 3
-                    $unitprice_tax_included,                      # 4
+                    $unitprice_tax_excluded,                      # 4
                     "",                                           # 5
                     $tax_code,                                    # 6
                     "", "", "",                                   # 7-9
