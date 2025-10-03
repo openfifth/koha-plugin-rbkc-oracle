@@ -2,7 +2,7 @@ package Koha::Plugin::Com::OpenFifth::Oracle;
 
 use Modern::Perl;
 
-use base            qw{ Koha::Plugins::Base };
+use base qw{ Koha::Plugins::Base };
 use C4::Context;
 use Koha::DateUtils qw(dt_from_string);
 use Koha::File::Transports;
@@ -467,7 +467,8 @@ sub _generate_report {
               Koha::Number::Price->new( $adjustment->adjustment )->round * 100;
             $total_adjustments += $adjustment_amount;
 
-          # Determine which order this adjustment applies to from the note field
+            # Determine which order this adjustment applies to from
+            # the note field
             my $adjustment_note        = $adjustment->note || '';
             my $adjustment_ordernumber = '';
             if ( $adjustment_note =~ /Order #(\d+)/ ) {
@@ -490,7 +491,7 @@ sub _generate_report {
               Koha::Number::Price->new( $adjustment->adjustment )->round;
 
             # Parse tax rate from adjustment note
-            my $note = $adjustment->note || '';
+            my $note         = $adjustment->note || '';
             my $tax_rate_pct = 0;
             if ( $note =~ /Tax Rate: (\d+)%/ ) {
                 $tax_rate_pct = $1;
@@ -501,19 +502,24 @@ sub _generate_report {
                 $tax_rate_pct == 20 ? 'P1'
               : $tax_rate_pct == 5  ? 'P2'
               : $tax_rate_pct == 0  ? 'P3'
-              :                       'P3';  # Default to P3 if unknown
+              :                       'P3';    # Default to P3 if unknown
 
-            # Calculate tax-exclusive amount based on CalculateFundValuesIncludingTax syspref
+            # Calculate tax-exclusive amount based on
+            # CalculateFundValuesIncludingTax syspref
             my $adjustment_amount_excl = $adjustment_amount;
-            if ( C4::Context->preference('CalculateFundValuesIncludingTax') && $tax_rate_pct > 0 ) {
-                # Adjustment is tax-included, back-calculate to get tax-exclusive
-                $adjustment_amount_excl = $adjustment_amount / ( 1 + ( $tax_rate_pct / 100 ) );
+            if ( C4::Context->preference('CalculateFundValuesIncludingTax')
+                && $tax_rate_pct > 0 )
+            {
+               # Adjustment is tax-included, back-calculate to get tax-exclusive
+                $adjustment_amount_excl =
+                  $adjustment_amount / ( 1 + ( $tax_rate_pct / 100 ) );
             }
 
             # Convert to pence
             $adjustment_amount_excl = $adjustment_amount_excl * 100;
 
-# Use the adjustment's budget if available, otherwise fallback to first order's budget
+            # Use the adjustment's budget if available, otherwise fallback to
+            # first order's budget
             my $adj_budget_code;
             if ( $adjustment->budget_id ) {
                 my $adj_fund =
@@ -540,7 +546,7 @@ sub _generate_report {
                 "",                                                # 5
                 $tax_code,                                         # 6
                 "", "", "",                                        # 7-9
-                $self->_map_fund_to_analysis($adj_budget_code),   # 10
+                $self->_map_fund_to_analysis($adj_budget_code),    # 10
                 "",                                                # 11
                 $costcenter,                                       # 12
                 $invoice->invoicenumber,                           # 13
@@ -556,7 +562,8 @@ sub _generate_report {
             push @invoice_gl_rows, $generate_adjustment_row->($adjustment);
         }
 
-# Collect 'General Ledger lines' for orders, interleaving order-specific adjustments
+        # Collect 'General Ledger lines' for orders,
+        # interleaving order-specific adjustments
         my $invoice_total = 0;
         my $tax_amount    = 0;
         while ( my $line = $orders->next ) {
