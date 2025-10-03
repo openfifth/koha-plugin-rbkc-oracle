@@ -3,6 +3,7 @@ package Koha::Plugin::Com::OpenFifth::Oracle;
 use Modern::Perl;
 
 use base            qw{ Koha::Plugins::Base };
+use C4::Context;
 use Koha::DateUtils qw(dt_from_string);
 use Koha::File::Transports;
 use Koha::Number::Price;
@@ -486,7 +487,31 @@ sub _generate_report {
         my $generate_adjustment_row = sub {
             my ($adjustment) = @_;
             my $adjustment_amount =
-              Koha::Number::Price->new( $adjustment->adjustment )->round * 100;
+              Koha::Number::Price->new( $adjustment->adjustment )->round;
+
+            # Parse tax rate from adjustment note
+            my $note = $adjustment->note || '';
+            my $tax_rate_pct = 0;
+            if ( $note =~ /Tax Rate: (\d+)%/ ) {
+                $tax_rate_pct = $1;
+            }
+
+            # Determine tax code based on tax rate
+            my $tax_code =
+                $tax_rate_pct == 20 ? 'P1'
+              : $tax_rate_pct == 5  ? 'P2'
+              : $tax_rate_pct == 0  ? 'P3'
+              :                       'P3';  # Default to P3 if unknown
+
+            # Calculate tax-exclusive amount based on CalculateFundValuesIncludingTax syspref
+            my $adjustment_amount_excl = $adjustment_amount;
+            if ( C4::Context->preference('CalculateFundValuesIncludingTax') && $tax_rate_pct > 0 ) {
+                # Adjustment is tax-included, back-calculate to get tax-exclusive
+                $adjustment_amount_excl = $adjustment_amount / ( 1 + ( $tax_rate_pct / 100 ) );
+            }
+
+            # Convert to pence
+            $adjustment_amount_excl = $adjustment_amount_excl * 100;
 
 # Use the adjustment's budget if available, otherwise fallback to first order's budget
             my $adj_budget_code;
@@ -508,14 +533,14 @@ sub _generate_report {
             my $costcenter = $self->_map_fund_to_costcenter($adj_budget_code);
 
             return [
-                "GL",                     # 1
-                $supplier_account,        # 2
-                $invoice->invoicenumber,  # 3
-                $adjustment_amount,       # 4
-                "",                       # 5
-                "P3",                     # 6 Fixed tax code for service charges
-                "", "", "",               # 7-9
-                $self->_map_fund_to_analysis($adj_budget_code),    # 10
+                "GL",                                              # 1
+                $supplier_account,                                 # 2
+                $invoice->invoicenumber,                           # 3
+                $adjustment_amount_excl,                           # 4
+                "",                                                # 5
+                $tax_code,                                         # 6
+                "", "", "",                                        # 7-9
+                $self->_map_fund_to_analysis($adj_budget_code),   # 10
                 "",                                                # 11
                 $costcenter,                                       # 12
                 $invoice->invoicenumber,                           # 13
