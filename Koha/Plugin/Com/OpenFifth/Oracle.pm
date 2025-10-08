@@ -463,21 +463,25 @@ sub _generate_report {
           ();    # Adjustments with order numbers, keyed by ordernumber
 
         while ( my $adjustment = $adjustments->next ) {
+
             # Keep full precision - don't round yet (Round Last principle)
             my $adjustment_amount = $adjustment->adjustment;
 
-            # For AP total, we always need tax-included amounts
-            # Parse tax rate from adjustment note to calculate tax-included amount
-            my $note = $adjustment->note || '';
+          # For AP total, we always need tax-included amounts
+          # Parse tax rate from adjustment note to calculate tax-included amount
+            my $note         = $adjustment->note || '';
             my $tax_rate_pct = 0;
             if ( $note =~ /Tax Rate: (\d+)%/ ) {
                 $tax_rate_pct = $1;
             }
 
             my $adjustment_amount_inc = $adjustment_amount;
-            if ( !C4::Context->preference('CalculateFundValuesIncludingTax') && $tax_rate_pct > 0 ) {
-                # Adjustment is tax-excluded, add tax to get tax-included for AP total
-                $adjustment_amount_inc = $adjustment_amount * ( 1 + ( $tax_rate_pct / 100 ) );
+            if ( !C4::Context->preference('CalculateFundValuesIncludingTax')
+                && $tax_rate_pct > 0 )
+            {
+          # Adjustment is tax-excluded, add tax to get tax-included for AP total
+                $adjustment_amount_inc =
+                  $adjustment_amount * ( 1 + ( $tax_rate_pct / 100 ) );
             }
 
             # Convert to pence for total calculation (still full precision)
@@ -503,6 +507,7 @@ sub _generate_report {
         # Helper function to generate adjustment GL row
         my $generate_adjustment_row = sub {
             my ($adjustment) = @_;
+
             # Keep full precision - don't round yet (Round Last principle)
             my $adjustment_amount = $adjustment->adjustment;
 
@@ -531,10 +536,10 @@ sub _generate_report {
                   $adjustment_amount / ( 1 + ( $tax_rate_pct / 100 ) );
             }
 
-            # Convert to pence and round to integer (Round Last - only at output)
-            # Use HMRC-compliant rounding (round half up)
+# Round to nearest penny, then convert to integer pence (Round Last - only at output)
+# Use HMRC-compliant rounding (round half up)
             $adjustment_amount_excl =
-              Koha::Number::Price->new( $adjustment_amount_excl * 100 )->round;
+              Koha::Number::Price->new($adjustment_amount_excl)->round * 100;
 
             # Use the adjustment's budget if available, otherwise fallback to
             # first order's budget
@@ -594,7 +599,7 @@ sub _generate_report {
             # Values in pence but still full precision
             my $unitprice_tax_included = $line->unitprice_tax_included * 100;
             my $unitprice_tax_excluded = $line->unitprice_tax_excluded * 100;
-            my $quantity = $line->quantity || 1;
+            my $quantity               = $line->quantity || 1;
             $invoice_total =
               $invoice_total + ( $unitprice_tax_included * $quantity );
             my $tax_value_on_receiving = $line->tax_value_on_receiving * 100;
@@ -609,10 +614,11 @@ sub _generate_report {
             # Generate one GL row per quantity unit
             for my $qty_unit ( 1 .. $quantity ) {
                 push @invoice_gl_rows, [
-                    "GL",                                         # 1
-                    $supplier_account,                            # 2
-                    $invoice->invoicenumber,                      # 3
-                    Koha::Number::Price->new($unitprice_tax_excluded)->round,  # 4 - HMRC round (Round Last)
+                    "GL",                       # 1
+                    $supplier_account,          # 2
+                    $invoice->invoicenumber,    # 3
+                    Koha::Number::Price->new( $unitprice_tax_excluded / 100 )
+                      ->round * 100,            # 4 - HMRC round (Round Last)
                     "",                                           # 5
                     $tax_code,                                    # 6
                     "", "", "",                                   # 7-9
@@ -651,11 +657,12 @@ sub _generate_report {
         $overall_total = $overall_total + $invoice_total;
 
         push @all_rows, [
-            "AP",                                                       # 1
-            $supplier_number,                                           # 2
-            $invoice->invoicenumber,                                    # 3
-            ( $invoice->closedate =~ s/-//gr ),                         # 4
-            Koha::Number::Price->new($invoice_total)->round,            # 5 - HMRC round (Round Last)
+            "AP",                                  # 1
+            $supplier_number,                      # 2
+            $invoice->invoicenumber,               # 3
+            ( $invoice->closedate =~ s/-//gr ),    # 4
+            Koha::Number::Price->new( $invoice_total / 100 )->round *
+              100,                                 # 5 - HMRC round (Round Last)
             "",                                                         # 6
             $invoice->invoicenumber,                                    # 7
             "", "", "", "", "",                                         # 8-12
@@ -673,9 +680,10 @@ sub _generate_report {
     # Add 'Control Total row' at the beginning
     $overall_total = $overall_total * -1;
     my $ct_row = [
-        "CT",                                       # 1
-        $invoice_count,                             # 2
-        Koha::Number::Price->new($overall_total)->round,  # 3 - HMRC round (Round Last)
+        "CT",              # 1
+        $invoice_count,    # 2
+        Koha::Number::Price->new( $overall_total / 100 )->round *
+          100,             # 3 - HMRC round (Round Last)
         "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
         "", "", ""         # 4-24
     ];
