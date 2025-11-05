@@ -508,7 +508,6 @@ sub _generate_report {
         my $generate_adjustment_row = sub {
             my ($adjustment) = @_;
 
-            # Keep full precision - don't round yet (Round Last principle)
             my $adjustment_amount = $adjustment->adjustment;
 
             # Parse tax rate from adjustment note
@@ -525,21 +524,28 @@ sub _generate_report {
               : $tax_rate_pct == 0  ? 'P3'
               :                       'P3';    # Default to P3 if unknown
 
-            # Calculate tax-exclusive amount based on
-            # CalculateFundValuesIncludingTax syspref
-            my $adjustment_amount_excl = $adjustment_amount;
-            if ( C4::Context->preference('CalculateFundValuesIncludingTax')
-                && $tax_rate_pct > 0 )
-            {
-               # Adjustment is tax-included, back-calculate to get tax-exclusive
-                $adjustment_amount_excl =
-                  $adjustment_amount / ( 1 + ( $tax_rate_pct / 100 ) );
+            # Try to parse raw EDI tax-exclusive amount from note
+            # This preserves the exact value from the supplier's EDI file
+            my $adjustment_amount_excl;
+            if ( $note =~ /EDI_EXCL:\s*([\d.]+)/ ) {
+                # Use exact EDI tax-exclusive amount (from MOA+8)
+                $adjustment_amount_excl = $1;
+            }
+            else {
+                # Fallback: Calculate tax-exclusive amount from stored value
+                # (for legacy adjustments without EDI_EXCL in note)
+                $adjustment_amount_excl = $adjustment_amount;
+                if ( C4::Context->preference('CalculateFundValuesIncludingTax')
+                    && $tax_rate_pct > 0 )
+                {
+                   # Adjustment is tax-included, back-calculate to get tax-exclusive
+                    $adjustment_amount_excl =
+                      $adjustment_amount / ( 1 + ( $tax_rate_pct / 100 ) );
+                }
             }
 
-# Round to nearest penny, then convert to integer pence (Round Last - only at output)
-# Use HMRC-compliant rounding (round half up)
-            $adjustment_amount_excl =
-              Koha::Number::Price->new($adjustment_amount_excl)->round * 100;
+            # Convert to pence
+            $adjustment_amount_excl = $adjustment_amount_excl * 100;
 
             # Use the adjustment's budget if available, otherwise fallback to
             # first order's budget
@@ -561,11 +567,16 @@ sub _generate_report {
               $self->_map_fund_to_supplier_account($adj_budget_code);
             my $costcenter = $self->_map_fund_to_costcenter($adj_budget_code);
 
+            # Round to nearest penny and convert to integer pence
+            # This uses exact EDI values where available (from EDI_EXCL in note)
+            my $output_pence =
+              Koha::Number::Price->new( $adjustment_amount_excl / 100 )->round * 100;
+
             return [
                 "GL",                                              # 1
                 $supplier_account,                                 # 2
                 $invoice->invoicenumber,                           # 3
-                $adjustment_amount_excl,                           # 4
+                $output_pence,                                     # 4 - Amount in pence
                 "",                                                # 5
                 $tax_code,                                         # 6
                 "", "", "",                                        # 7-9
