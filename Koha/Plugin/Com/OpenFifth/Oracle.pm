@@ -13,14 +13,14 @@ use List::Util qw(min max);
 use Mojo::JSON qw{ decode_json };
 use Text::CSV;
 
-our $VERSION = '0.0.46';
+our $VERSION = '0.0.47';
 
 our $metadata = {
     name => 'Oracle Finance Integration',
 
     author          => 'Open Fifth',
     date_authored   => '2024-11-15',
-    date_updated    => '2025-11-05',
+    date_updated    => '2025-11-13',
     minimum_version => '24.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
@@ -457,38 +457,12 @@ sub _generate_report {
 
         # Collect and categorize adjustments first
         my $adjustments         = $invoice->_result->aqinvoice_adjustments;
-        my $total_adjustments   = 0;
         my @general_adjustments = ();    # Adjustments without order references
         my %order_adjustments =
           ();    # Adjustments with order numbers, keyed by ordernumber
 
         while ( my $adjustment = $adjustments->next ) {
-
-            # Keep full precision - don't round yet (Round Last principle)
-            my $adjustment_amount = $adjustment->adjustment;
-
-          # For AP total, we always need tax-included amounts
-          # Parse tax rate from adjustment note to calculate tax-included amount
-            my $note         = $adjustment->note || '';
-            my $tax_rate_pct = 0;
-            if ( $note =~ /Tax Rate: (\d+)%/ ) {
-                $tax_rate_pct = $1;
-            }
-
-            my $adjustment_amount_inc = $adjustment_amount;
-            if ( !C4::Context->preference('CalculateFundValuesIncludingTax')
-                && $tax_rate_pct > 0 )
-            {
-          # Adjustment is tax-excluded, add tax to get tax-included for AP total
-                $adjustment_amount_inc =
-                  $adjustment_amount * ( 1 + ( $tax_rate_pct / 100 ) );
-            }
-
-            # Convert to pence for total calculation (still full precision)
-            $total_adjustments += $adjustment_amount_inc * 100;
-
-            # Determine which order this adjustment applies to from
-            # the note field
+            # Determine which order this adjustment applies to from the note field
             my $adjustment_note        = $adjustment->note || '';
             my $adjustment_ordernumber = '';
             if ( $adjustment_note =~ /Order #(\d+)/ ) {
@@ -598,8 +572,6 @@ sub _generate_report {
 
         # Collect 'General Ledger lines' for orders,
         # interleaving order-specific adjustments
-        my $invoice_total = 0;
-        my $tax_amount    = 0;
         while ( my $line = $orders->next ) {
             my $supplier_account = $self->_map_fund_to_supplier_account(
                 $line->budget->budget_code );
@@ -608,13 +580,8 @@ sub _generate_report {
 
             # Keep full precision - don't round yet (Round Last principle)
             # Values in pence but still full precision
-            my $unitprice_tax_included = $line->unitprice_tax_included * 100;
             my $unitprice_tax_excluded = $line->unitprice_tax_excluded * 100;
             my $quantity               = $line->quantity || 1;
-            $invoice_total =
-              $invoice_total + ( $unitprice_tax_included * $quantity );
-            my $tax_value_on_receiving = $line->tax_value_on_receiving * 100;
-            $tax_amount = $tax_amount + $tax_value_on_receiving;
             my $tax_rate_on_receiving = $line->tax_rate_on_receiving * 100;
             my $tax_code =
                 $tax_rate_on_receiving == 20 ? 'P1'
@@ -624,12 +591,14 @@ sub _generate_report {
 
             # Generate one GL row per quantity unit
             for my $qty_unit ( 1 .. $quantity ) {
+                my $gl_amount_excl_pence =
+                    Koha::Number::Price->new( $unitprice_tax_excluded / 100 )->round * 100;
+
                 push @invoice_gl_rows, [
                     "GL",                       # 1
                     $supplier_account,          # 2
                     $invoice->invoicenumber,    # 3
-                    Koha::Number::Price->new( $unitprice_tax_excluded / 100 )
-                      ->round * 100,            # 4 - HMRC round (Round Last)
+                    $gl_amount_excl_pence,      # 4 - Amount in pence (tax-excluded)
                     "",                                           # 5
                     $tax_code,                                    # 6
                     "", "", "",                                   # 7-9
@@ -658,8 +627,51 @@ sub _generate_report {
 
         }
 
-        # Add adjustments to invoice total
-        $invoice_total += $total_adjustments;
+        # Round Last: Calculate AP total from ALL GL lines by tax rate
+        # This ensures Oracle's validation passes: round(GL_total × 1.20) = AP_total
+        #
+        # Note: We recalculate from GL lines rather than using supplier's invoice total
+        # to ensure Oracle's validation formula is satisfied, even if it creates a 1p
+        # difference from the supplier's exact invoice amount.
+        $invoice_total = 0;
+
+        # Collect all GL amounts by tax rate (including adjustments)
+        my %all_gl_by_tax_rate = ();  # {tax_rate => [gl_amounts_in_pence]}
+
+        for my $gl_row (@invoice_gl_rows) {
+            next unless $gl_row->[0] eq 'GL';  # Only process GL rows
+
+            my $gl_amount_pence = $gl_row->[3];  # Field 4 is amount
+            my $tax_code = $gl_row->[5];         # Field 6 is tax code
+
+            # Map tax code back to rate
+            my $tax_rate = $tax_code eq 'P1' ? 20 : $tax_code eq 'P2' ? 5 : 0;
+
+            $all_gl_by_tax_rate{$tax_rate} //= [];
+            push @{ $all_gl_by_tax_rate{$tax_rate} }, $gl_amount_pence;
+        }
+
+        # Calculate AP total using Round Last per tax rate
+        foreach my $tax_rate (keys %all_gl_by_tax_rate) {
+            my $gl_amounts = $all_gl_by_tax_rate{$tax_rate};
+            my $gl_total_excl_pence = 0;
+
+            # Sum all GL lines for this tax rate
+            foreach my $amount (@$gl_amounts) {
+                $gl_total_excl_pence += $amount;
+            }
+
+            if ($tax_rate > 0) {
+                # Apply tax rate and round at the end (Round Last)
+                # This ensures: round(GL_total × 1.20) = AP_total for P1
+                my $gl_total_inc_pounds = ($gl_total_excl_pence / 100) * (1 + ($tax_rate / 100));
+                my $gl_total_inc_pence = Koha::Number::Price->new($gl_total_inc_pounds)->round * 100;
+                $invoice_total += $gl_total_inc_pence;
+            } else {
+                # Tax rate 0 - no VAT, GL = AP
+                $invoice_total += $gl_total_excl_pence;
+            }
+        }
 
         # Add 'Accounts Payable row' FIRST
         my $supplier_number    = $invoice->_result->booksellerid->accountnumber;
