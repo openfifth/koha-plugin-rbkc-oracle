@@ -633,7 +633,7 @@ sub _generate_report {
         # Note: We recalculate from GL lines rather than using supplier's invoice total
         # to ensure Oracle's validation formula is satisfied, even if it creates a 1p
         # difference from the supplier's exact invoice amount.
-        $invoice_total = 0;
+        my $invoice_total = 0;
 
         # Collect all GL amounts by tax rate (including adjustments)
         my %all_gl_by_tax_rate = ();  # {tax_rate => [gl_amounts_in_pence]}
