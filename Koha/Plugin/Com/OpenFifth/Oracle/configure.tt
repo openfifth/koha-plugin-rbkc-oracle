@@ -88,6 +88,44 @@
                         </div>
                         [% END %]
                     </fieldset>
+                    <fieldset class="rows">
+                        <legend>Fund Mappings</legend>
+                        <div class="hint">Map fund codes to their corresponding Oracle fields. Changes here override built-in defaults. Leave a field blank to keep its current default value.</div>
+                        [% IF funds.count %]
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Fund Code</th>
+                                    <th>Budget Name</th>
+                                    <th>Cost Center</th>
+                                    <th>Supplier Account</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                [% WHILE (fund = funds.next) %]
+                                <tr>
+                                    <td><strong>[% fund.budget_code | html %]</strong></td>
+                                    <td>[% fund.budget_name | html %]</td>
+                                    <td>
+                                        <input type="text" name="fund_costcenter_[% fund.budget_code | html %]"
+                                               value="[% fund_mappings.${fund.budget_code}.costcenter | html %]"
+                                               maxlength="10" size="8" />
+                                    </td>
+                                    <td>
+                                        <input type="text" name="fund_supplier_account_[% fund.budget_code | html %]"
+                                               value="[% fund_mappings.${fund.budget_code}.supplier_account | html %]"
+                                               maxlength="10" size="8" />
+                                    </td>
+                                </tr>
+                                [% END %]
+                            </tbody>
+                        </table>
+                        [% ELSE %]
+                        <div class="alert alert-warning">
+                            No acquisition funds found. Please ensure you have created acquisition budgets and funds in Koha.
+                        </div>
+                        [% END %]
+                    </fieldset>
                     <fieldset class="action">
                         <input type="hidden" name="save" value="1" />
                         <input type="submit" class="btn btn-primary" value="Save configuration" />
