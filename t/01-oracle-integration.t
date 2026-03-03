@@ -11,9 +11,19 @@ my $package_json_path = path($plugin_dir)->child('package.json');
 
 # Add plugin directory to @INC
 unshift @INC, $plugin_dir;
+use Mojo::JSON qw(encode_json);
+
 use_ok('Koha::Plugin::Com::OpenFifth::Oracle') || print "Bail out!\n";
 
 my $plugin = Koha::Plugin::Com::OpenFifth::Oracle->new();
+
+# Seed fund mappings so mapping methods have data to read
+$plugin->store_data({ fund_field_mappings => encode_json({
+    KAFI => { costcenter => 'E26315', supplier_account => '4539' },
+    KERE => { costcenter => 'E26341', supplier_account => '5190' },
+    KHLS => { costcenter => 'E26330', supplier_account => '4539' },
+    KPER => { costcenter => 'E26315', supplier_account => '4625' },
+}) });
 
 # Test fund mapping methods
 subtest 'Fund to cost center mapping' => sub {
