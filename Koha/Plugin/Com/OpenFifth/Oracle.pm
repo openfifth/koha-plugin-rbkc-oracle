@@ -14,7 +14,7 @@ use List::Util qw(min max);
 use Mojo::JSON qw{ decode_json encode_json };
 use Text::CSV;
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.1.1';
 
 our $metadata = {
     name => 'Oracle Finance Integration',
