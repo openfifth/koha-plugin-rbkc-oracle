@@ -70,7 +70,14 @@
             </main>
         </div>
         <div class="col-md-2 order-sm-2 order-md-1">
-            <aside></aside>
+            <aside>
+                <div id="navmenulist" class="sidebar_menu">
+                    <h5>RBKC Oracle</h5>
+                    <ul>
+                        <li><a href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS | uri %]&amp;method=report&amp;page=manage_submissions">Manage submitted invoices</a></li>
+                    </ul>
+                </div>
+            </aside>
         </div>
     </div>
 

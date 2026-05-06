@@ -190,7 +190,7 @@ sub cronjob_nightly {
         $start_date->ymd, $end_date->ymd
     ) );
 
-    my $report = $self->_generate_report( $start_date, $end_date, 1 );
+    my $report = $self->_generate_report( $start_date, $end_date, 1, 1 );
     unless ($report) {
         $logger->info("Oracle nightly cronjob: no invoices found for date range, skipping upload");
         return;
@@ -202,6 +202,7 @@ sub cronjob_nightly {
         open my $fh, '<', \$report;
         if ( $transport->upload_file( $fh, $filename ) ) {
             close $fh;
+            $self->_mark_invoices_submitted( $self->{_processed_invoices}, $filename, 'cron' );
             $logger->info("Oracle nightly cronjob: uploaded $filename");
             return 1;
         }
@@ -217,6 +218,7 @@ sub cronjob_nightly {
         open( my $fh, '>', $file_path ) or die "Unable to open $file_path: $!";
         print $fh $report;
         close($fh);
+        $self->_mark_invoices_submitted( $self->{_processed_invoices}, $filename, 'cron' );
         $logger->info("Oracle nightly cronjob: wrote report to $file_path");
         return 1;
     }
@@ -226,11 +228,14 @@ sub report {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
 
-    unless ( $cgi->param('output') ) {
-        $self->report_step1();
+    if ( ( $cgi->param('page') // '' ) eq 'manage_submissions' ) {
+        $self->manage_submissions();
+    }
+    elsif ( $cgi->param('output') ) {
+        $self->report_step2();
     }
     else {
-        $self->report_step2();
+        $self->report_step1();
     }
 }
 
@@ -277,12 +282,17 @@ sub report_step2 {
     my $results = $self->_generate_report( $startdate, $enddate );
 
     my $templatefile;
+    my $already_submitted_count = 0;
     if ( $output eq "txt" ) {
         my $filename = $self->_generate_filename;
         print $cgi->header( -attachment => "$filename" );
         $templatefile = 'report-step2-txt.tt';
     }
     else {
+        my $submitted = $self->_get_submitted_invoice_numbers();
+        for my $inv ( @{ $self->{_processed_invoices} || [] } ) {
+            $already_submitted_count++ if $submitted->{$inv};
+        }
         print $cgi->header();
         $templatefile = 'report-step2-html.tt';
     }
@@ -290,13 +300,14 @@ sub report_step2 {
     my $template = $self->get_template( { file => $templatefile } );
 
     $template->param(
-        date_ran      => dt_from_string(),
-        startdate     => dt_from_string($startdate),
-        enddate       => dt_from_string($enddate),
-        results       => $results,
-        filename      => $self->_generate_filename(),
-        output_config => $self->retrieve_data('output'),
-        CLASS         => ref($self),
+        date_ran                => dt_from_string(),
+        startdate               => dt_from_string($startdate),
+        enddate                 => dt_from_string($enddate),
+        results                 => $results,
+        filename                => $self->_generate_filename(),
+        output_config           => $self->retrieve_data('output'),
+        already_submitted_count => $already_submitted_count,
+        CLASS                   => ref($self),
     );
 
     print $template->output();
@@ -439,6 +450,7 @@ sub sftp_upload {
             close $fh;
 
             if ($upload_result) {
+                $self->_mark_invoices_submitted( $self->{_processed_invoices}, $filename, 'manual' );
                 print $cgi->header('application/json');
                 print
 '{"success": true, "message": "File uploaded successfully to SFTP server", "filename": "'
@@ -476,6 +488,7 @@ sub sftp_upload {
             print $fh $report;
             close($fh);
 
+            $self->_mark_invoices_submitted( $self->{_processed_invoices}, $filename, 'manual' );
             print $cgi->header('application/json');
             print
 '{"success": true, "message": "File saved successfully to server", "filename": "'
@@ -491,7 +504,9 @@ sub sftp_upload {
 }
 
 sub _generate_report {
-    my ( $self, $startdate, $enddate, $cron ) = @_;
+    my ( $self, $startdate, $enddate, $cron, $exclude_submitted ) = @_;
+
+    $self->{_processed_invoices} = [];
 
     my $where = { 'booksellerid.name' => { 'LIKE' => 'RBKC%' } };
 
@@ -507,6 +522,13 @@ sub _generate_report {
     }
     elsif ($enddate_iso) {
         $where->{'me.closedate'} = { '<=', $enddate_iso };
+    }
+
+    if ($exclude_submitted) {
+        my $submitted = $self->_get_submitted_invoice_numbers();
+        if (%$submitted) {
+            $where->{'me.invoicenumber'} = { '-not_in' => [ keys %$submitted ] };
+        }
     }
 
     my $invoices = Koha::Acquisition::Invoices->search( $where,
@@ -534,6 +556,7 @@ sub _generate_report {
     my @all_rows      = ();    # Store all rows to add CT row at the beginning
     while ( my $invoice = $invoices->next ) {
         $invoice_count++;
+        push @{ $self->{_processed_invoices} }, $invoice->invoicenumber;
         my $lines  = "";
         my $orders = $invoice->_result->aqorders;
 
@@ -829,6 +852,62 @@ sub _map_fund_to_supplier_account {
 sub _map_fund_to_analysis {
     my ( $self, $fund ) = @_;
     return 'analysis';
+}
+
+sub _get_submitted_invoice_numbers {
+    my ($self) = @_;
+    my $dbh  = C4::Context->dbh;
+    my $rows = $dbh->selectall_arrayref(
+        'SELECT invoicenumber FROM plugin_oracle_submitted_invoices',
+        { Slice => {} }
+    );
+    return { map { $_->{invoicenumber} => 1 } @$rows };
+}
+
+sub _mark_invoices_submitted {
+    my ( $self, $invoice_numbers, $filename, $by ) = @_;
+    return unless $invoice_numbers && @$invoice_numbers;
+    my $dbh = C4::Context->dbh;
+    my $sth = $dbh->prepare(
+        'INSERT IGNORE INTO plugin_oracle_submitted_invoices
+         (invoicenumber, submitted_at, submitted_by, filename)
+         VALUES (?, NOW(), ?, ?)'
+    );
+    for my $inv (@$invoice_numbers) {
+        $sth->execute( $inv, $by // 'cron', $filename );
+    }
+}
+
+sub manage_submissions {
+    my ( $self, $args ) = @_;
+    my $cgi = $self->{'cgi'};
+
+    if ( ( $cgi->param('action') // '' ) eq 'clear' ) {
+        my @to_clear = $cgi->multi_param('invoicenumber');
+        if (@to_clear) {
+            my $dbh          = C4::Context->dbh;
+            my $placeholders = join( ',', ('?') x @to_clear );
+            $dbh->do(
+                "DELETE FROM plugin_oracle_submitted_invoices WHERE invoicenumber IN ($placeholders)",
+                undef, @to_clear
+            );
+        }
+    }
+
+    my $dbh  = C4::Context->dbh;
+    my $rows = $dbh->selectall_arrayref(
+        'SELECT invoicenumber, submitted_at, submitted_by, filename
+         FROM plugin_oracle_submitted_invoices
+         ORDER BY submitted_at DESC',
+        { Slice => {} }
+    );
+
+    my $template = $self->get_template( { file => 'manage-submissions.tt' } );
+    $template->param(
+        submitted_invoices => $rows,
+        CLASS              => ref($self),
+    );
+    $self->output_html( $template->output() );
 }
 
 1;

@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Plugin install lifecycle: `install`/`uninstall`/`upgrade` methods now create and drop the `plugin_oracle_submitted_invoices` table, bringing the plugin in line with the sibling SAP and WSCC Oracle plugins (foundation for invoice submission deduplication)
+- Plugin install lifecycle: `install`/`uninstall`/`upgrade` methods now create and drop the `plugin_oracle_submitted_invoices` table, bringing the plugin in line with the sibling SAP and WSCC Oracle plugins
+- Invoice submission deduplication: the nightly cron and the manual SFTP/save buttons now record successfully submitted invoices in `plugin_oracle_submitted_invoices`, and the cron excludes already-submitted invoices on subsequent runs to prevent duplicate uploads
+- "Manage submitted invoices" sidebar link on the report page and a new `manage-submissions.tt` UI for viewing the submission log and selectively allowing resubmission of specific invoices
+- Warning banner on the HTML report preview when invoices in the chosen date range have already been submitted
 
 ## [0.2.2] - 2026-05-06
 
