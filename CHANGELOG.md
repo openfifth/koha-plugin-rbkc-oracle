@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Clarify on the configuration page that Transport settings are unused when Output is set to "Local file" — the Transport fieldset is now disabled and an explanation describes the pull-vs-push model
+
 ### Fixed
 - Fix line ordering bug where AP lines were appearing after GL lines instead of before
 
@@ -189,3 +192,5 @@ Starting with version 0.0.22, releases follow the modern auto-release workflow:
 2. GitHub Actions automatically tests against Koha main, stable, and oldstable
 3. KPZ files are created automatically for releases
 4. Release notes are generated from this CHANGELOG.md
+
+[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.0...HEAD
