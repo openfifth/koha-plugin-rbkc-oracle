@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-05-06
+
 ### Changed
 
 - Configuration page: merge Output and Transport into a single fieldset with Transport as a nested sub-fieldset; render Run days checkboxes horizontally instead of vertically in their own top-level fieldset
@@ -295,7 +297,8 @@ Starting with version 0.0.22, releases follow the modern auto-release workflow:
 3. KPZ files are created automatically for releases
 4. Release notes are generated from this CHANGELOG.md
 
-[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.1.1...v0.1.2
