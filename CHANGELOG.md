@@ -7,11 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-06
+
 ### Changed
 - Clarify on the configuration page that Transport settings are unused when Output is set to "Local file" — the Transport fieldset is now disabled and an explanation describes the pull-vs-push model
 
+## [0.2.0] - 2026-03-04
+
+### Added
+- Logging for the nightly cronjob via `Koha::Logger`
+
+## [0.1.2] - 2026-03-03
+
+### Changed
+- Seed fund mappings in integration tests
+
+## [0.1.1] - 2026-03-03
+
+Release housekeeping only — no functional changes.
+
+## [0.1.0] - 2026-03-03
+
+### Added
+- UI-driven fund mappings configuration on the configuration page, replacing the previous hardcoded fund-to-cost-center/supplier-account mappings
+
+## [0.0.49] - 2025-11-13
+
 ### Fixed
-- Fix line ordering bug where AP lines were appearing after GL lines instead of before
+- Declare `$invoice_total` variable with `my` to satisfy strict mode
+
+## [0.0.48] - 2025-11-13
+
+### Changed
+- Pin the GitHub Actions workflows to a single image and branch
+
+## [0.0.47] - 2025-11-13
+
+### Added
+- "Round Last" AP calculation for Oracle validation
+
+## [0.0.46] - 2025-11-05
+
+### Fixed
+- Use exact EDI amounts for adjustments to preserve supplier data integrity — parse `EDI_EXCL` values from adjustment notes (MOA+8 segments) instead of back-calculating tax-exclusive from tax-inclusive, falling back to calculation only for legacy adjustments
+
+## [0.0.45] - 2025-10-08
+
+### Fixed
+- Correct `Koha::Number::Price` usage to output integer pence
+
+## [0.0.44] - 2025-10-08
+
+### Fixed
+- Implement HMRC-compliant rounding and the "Round Last" principle — keep full precision through intermediate calculations and round half-up only at CSV export
+
+## [0.0.43] - 2025-10-06
+
+### Fixed
+- Round adjustment amounts to integer pence
+
+## [0.0.42] - 2025-10-03
+
+### Fixed
+- Calculate tax-included adjustment amounts for the AP total when the `CalculateFundValuesIncludingTax` syspref is FALSE
+
+### Changed
+- Codebase tidy
+
+## [0.0.41] - 2025-10-03
+
+### Fixed
+- Parse service charge tax rates from adjustment notes
+
+## [0.0.40] - 2025-10-01
+
+### Fixed
+- Further corrections for ticket 131752 tax changes
+
+## [0.0.39] - 2025-09-30
+
+### Fixed
+- Additional corrections for ticket 131752 tax changes
+
+## [0.0.38] - 2025-09-30
+
+### Fixed
+- AP header lines now use tax-inclusive totals while GL ledger lines use tax-exclusive amounts (ticket 131752)
+
+## [0.0.37] - 2025-08-28
+
+### Fixed
+- Additional mapping correction follow-up to v0.0.36
+
+## [0.0.36] - 2025-08-26
+
+### Fixed
+- Correct line ordering in CSV output — AP lines were appearing after GL lines instead of before
+- Correct mapping order for the analysis field addition
 
 ## [0.0.35] - 2025-08-26
 
@@ -193,4 +285,23 @@ Starting with version 0.0.22, releases follow the modern auto-release workflow:
 3. KPZ files are created automatically for releases
 4. Release notes are generated from this CHANGELOG.md
 
-[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.1.2...v0.2.0
+[0.1.2]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.49...v0.1.0
+[0.0.49]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.48...v0.0.49
+[0.0.48]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.47...v0.0.48
+[0.0.47]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.46...v0.0.47
+[0.0.46]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.45...v0.0.46
+[0.0.45]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.44...v0.0.45
+[0.0.44]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.43...v0.0.44
+[0.0.43]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.42...v0.0.43
+[0.0.42]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.41...v0.0.42
+[0.0.41]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.40...v0.0.41
+[0.0.40]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.39...v0.0.40
+[0.0.39]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.38...v0.0.39
+[0.0.38]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.37...v0.0.38
+[0.0.37]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.36...v0.0.37
+[0.0.36]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.0.35...v0.0.36
