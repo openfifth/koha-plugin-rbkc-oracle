@@ -2,6 +2,17 @@
 
 use Modern::Perl;
 use Test::More tests => 9;
+# Subtests:
+#   1. Fund to cost center mapping
+#   2. Fund to supplier account mapping
+#   3. Filename generation
+#   4. _generate_report with cron parameter
+#   5. Plugin metadata
+#   6. Required plugin methods (now includes install/uninstall/upgrade
+#      and submission-tracking helpers)
+#   7. Configuration handling
+#   8. Fund to analysis mapping
+#   9. (top-level use_ok)
 use Test::Exception;
 use Path::Tiny qw(path);
 
@@ -87,14 +98,20 @@ subtest 'Plugin metadata' => sub {
 
 # Test required plugin methods exist
 subtest 'Required plugin methods' => sub {
-    plan tests => 6;
-    
+    plan tests => 12;
+
     can_ok($plugin, 'configure');
-    can_ok($plugin, 'cronjob_nightly'); 
+    can_ok($plugin, 'cronjob_nightly');
     can_ok($plugin, 'report');
     can_ok($plugin, '_generate_report');
     can_ok($plugin, '_generate_filename');
     can_ok($plugin, 'new');
+    can_ok($plugin, 'install');
+    can_ok($plugin, 'uninstall');
+    can_ok($plugin, 'upgrade');
+    can_ok($plugin, 'manage_submissions');
+    can_ok($plugin, '_get_submitted_invoice_numbers');
+    can_ok($plugin, '_mark_invoices_submitted');
 };
 
 # Test configuration parameter handling
