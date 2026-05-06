@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Plugin install lifecycle: `install`/`uninstall`/`upgrade` methods now create and drop the `plugin_oracle_submitted_invoices` table, bringing the plugin in line with the sibling SAP and WSCC Oracle plugins (foundation for invoice submission deduplication)
+
 ## [0.2.2] - 2026-05-06
 
 ### Changed

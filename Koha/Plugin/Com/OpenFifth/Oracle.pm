@@ -42,6 +42,34 @@ sub new {
     return $self;
 }
 
+sub install {
+    my ($self) = @_;
+    my $dbh = C4::Context->dbh;
+    $dbh->do(q{
+        CREATE TABLE IF NOT EXISTS `plugin_oracle_submitted_invoices` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `invoicenumber` varchar(255) NOT NULL,
+          `submitted_at` datetime NOT NULL,
+          `submitted_by` varchar(255) NOT NULL DEFAULT 'cron',
+          `filename` varchar(255) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `unique_invoicenumber` (`invoicenumber`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    });
+    return 1;
+}
+
+sub uninstall {
+    my ($self) = @_;
+    C4::Context->dbh->do(q{ DROP TABLE IF EXISTS `plugin_oracle_submitted_invoices` });
+    return 1;
+}
+
+sub upgrade {
+    my ($self) = @_;
+    return $self->install();
+}
+
 sub configure {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
