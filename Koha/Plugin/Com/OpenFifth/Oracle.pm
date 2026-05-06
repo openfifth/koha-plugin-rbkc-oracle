@@ -56,12 +56,26 @@ sub install {
           UNIQUE KEY `unique_invoicenumber` (`invoicenumber`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     });
+    $dbh->do(q{
+        CREATE TABLE IF NOT EXISTS `plugin_oracle_cron_runs` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `run_at` datetime NOT NULL,
+          `status` varchar(255) NOT NULL,
+          `invoices_found` int(11) NOT NULL DEFAULT 0,
+          `filename` varchar(255) DEFAULT NULL,
+          `message` text DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          KEY `idx_run_at` (`run_at`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    });
     return 1;
 }
 
 sub uninstall {
     my ($self) = @_;
-    C4::Context->dbh->do(q{ DROP TABLE IF EXISTS `plugin_oracle_submitted_invoices` });
+    my $dbh = C4::Context->dbh;
+    $dbh->do(q{ DROP TABLE IF EXISTS `plugin_oracle_submitted_invoices` });
+    $dbh->do(q{ DROP TABLE IF EXISTS `plugin_oracle_cron_runs` });
     return 1;
 }
 
@@ -199,9 +213,15 @@ sub cronjob_nightly {
     my $report = $self->_generate_report( $start_date, $end_date, 1, 1 );
     unless ($report) {
         $logger->info("Oracle nightly cronjob: no invoices found for date range, skipping upload");
+        $self->_add_cron_run_log({
+            status         => 'no_data',
+            invoices_found => 0,
+            message        => sprintf( 'No invoices to submit for %s to %s', $start_date->ymd, $end_date->ymd ),
+        });
         return;
     }
-    my $filename = $self->_generate_filename();
+    my $filename       = $self->_generate_filename();
+    my $invoices_found = scalar @{ $self->{_processed_invoices} || [] };
 
     if ( $output eq 'upload' ) {
         $transport->connect;
@@ -210,11 +230,23 @@ sub cronjob_nightly {
             close $fh;
             $self->_mark_invoices_submitted( $self->{_processed_invoices}, $filename, 'cron' );
             $logger->info("Oracle nightly cronjob: uploaded $filename");
+            $self->_add_cron_run_log({
+                status         => 'success',
+                invoices_found => $invoices_found,
+                filename       => $filename,
+                message        => "Uploaded $filename",
+            });
             return 1;
         }
         else {
             close $fh;
             $logger->error("Oracle nightly cronjob: upload failed for $filename");
+            $self->_add_cron_run_log({
+                status         => 'error',
+                invoices_found => $invoices_found,
+                filename       => $filename,
+                message        => "Upload failed for $filename",
+            });
             return 0;
         }
     }
@@ -226,6 +258,12 @@ sub cronjob_nightly {
         close($fh);
         $self->_mark_invoices_submitted( $self->{_processed_invoices}, $filename, 'cron' );
         $logger->info("Oracle nightly cronjob: wrote report to $file_path");
+        $self->_add_cron_run_log({
+            status         => 'success',
+            invoices_found => $invoices_found,
+            filename       => $filename,
+            message        => "Wrote local file $file_path",
+        });
         return 1;
     }
 }
@@ -884,6 +922,21 @@ sub _mark_invoices_submitted {
     }
 }
 
+sub _add_cron_run_log {
+    my ( $self, $args ) = @_;
+    my $dbh = C4::Context->dbh;
+    $dbh->do(
+        'INSERT INTO plugin_oracle_cron_runs
+         (run_at, status, invoices_found, filename, message)
+         VALUES (NOW(), ?, ?, ?, ?)',
+        undef,
+        $args->{status}         // 'success',
+        $args->{invoices_found} // 0,
+        $args->{filename},
+        $args->{message},
+    );
+}
+
 sub manage_submissions {
     my ( $self, $args ) = @_;
     my $cgi = $self->{'cgi'};
@@ -908,9 +961,18 @@ sub manage_submissions {
         { Slice => {} }
     );
 
+    my $cron_runs = $dbh->selectall_arrayref(
+        'SELECT run_at, status, invoices_found, filename, message
+         FROM plugin_oracle_cron_runs
+         ORDER BY run_at DESC
+         LIMIT 30',
+        { Slice => {} }
+    );
+
     my $template = $self->get_template( { file => 'manage-submissions.tt' } );
     $template->param(
         submitted_invoices => $rows,
+        cron_runs          => $cron_runs,
         CLASS              => ref($self),
     );
     $self->output_html( $template->output() );
