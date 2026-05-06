@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Configuration page: merge Output and Transport into a single fieldset with Transport as a nested sub-fieldset; render Run days checkboxes horizontally instead of vertically in their own top-level fieldset
+- Configuration page: add an explicit "-- None --" option to the Transport server select so an unconfigured state is no longer misrepresented by the first listed transport appearing selected by default
+
+### Fixed
+
+- Configuration page: persist the selected Transport server correctly on re-render — the previous `transport_server.id` comparison against a scalar id always evaluated false, so the saved transport was never marked `selected`
+- Configuration page: rename the Output select's id from `output` to `report_output` to avoid a CSS clash with an upstream Koha rule on `#output`
+
 ## [0.2.1] - 2026-05-06
 
 ### Changed
