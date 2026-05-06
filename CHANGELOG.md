@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Make the `plugin_oracle_cron_runs` schema portable to older MariaDB and MySQL versions: drop the `DEFAULT NULL` clause from the `message TEXT` column. On MariaDB pre-10.2 / MySQL pre-8.0.13 a `TEXT` column cannot take a `DEFAULT` value, so `install()` would throw on those versions, which in turn caused the new Tools page to 500 (since `tool` calls `install()` defensively before `manage_submissions()`)
+
 ## [0.2.4] - 2026-05-06
 
 ### Added
