@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-05-13
+
 ### Fixed
 
 - Make the `plugin_oracle_cron_runs` schema portable to older MariaDB and MySQL versions: drop the `DEFAULT NULL` clause from the `message TEXT` column. On MariaDB pre-10.2 / MySQL pre-8.0.13 a `TEXT` column cannot take a `DEFAULT` value, so `install()` would throw on those versions, which in turn caused the new Tools page to 500 (since `tool` calls `install()` defensively before `manage_submissions()`)
@@ -322,7 +324,8 @@ Starting with version 0.0.22, releases follow the modern auto-release workflow:
 3. KPZ files are created automatically for releases
 4. Release notes are generated from this CHANGELOG.md
 
-[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.1...v0.2.2

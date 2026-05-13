@@ -15,14 +15,14 @@ use List::Util qw(min max);
 use Mojo::JSON qw{ decode_json encode_json };
 use Text::CSV;
 
-our $VERSION = '0.2.4';
+our $VERSION = '0.2.5';
 
 our $metadata = {
     name => 'Oracle Finance Integration',
 
     author          => 'Open Fifth',
     date_authored   => '2024-11-15',
-    date_updated    => '2026-05-06',
+    date_updated    => '2026-05-13',
     minimum_version => '24.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
