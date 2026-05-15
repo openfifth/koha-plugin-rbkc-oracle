@@ -193,22 +193,35 @@ sub cronjob_nightly {
         }
     }
 
-    # Find start date (previous selected day) and end date (today)
-    my $previous_day =
-      max( grep { $_ < $today } @selected_days );   # Last selected before today
-    $previous_day //=
-      $selected_days[-1];    # Wrap around to last one from previous week
+    # Work out how many days back the previous scheduled run was. Invoices
+    # closed *today* are excluded because the cron typically runs in the
+    # early hours and any invoices closed later in the day would otherwise
+    # be missed entirely (the next run starts from the day after today).
+    my $prev_in_week = max( grep { $_ < $today } @selected_days );
+    my $days_since_prev;
+    if ( defined $prev_in_week ) {
+        $days_since_prev = $today - $prev_in_week;
+    }
+    else {
+        # No earlier scheduled day this week -- wrap to the last selected
+        # day in the previous week. For a single-day schedule this means
+        # the previous run was exactly seven days ago.
+        $days_since_prev = ( $today - $selected_days[-1] ) % 7;
+        $days_since_prev ||= 7;
+    }
 
-    # Calculate the start date (previous selected day) and end date (today)
-    my $now = DateTime->now;
-    my $start_date =
-      $now->clone->subtract( days => ( $today - $previous_day ) % 7 );
-    my $end_date = $now;
+    # Build a day-granular inclusive window [previous_selected_day, yesterday].
+    # We truncate to the day so the in-memory range matches the date-only
+    # semantics of the SQL query in _generate_report (which uses
+    # datetime_parser->format_date, dropping any time component).
+    my $today_dt   = dt_from_string()->truncate( to => 'day' );
+    my $start_date = $today_dt->clone->subtract( days => $days_since_prev );
+    my $end_date   = $today_dt->clone->subtract( days => 1 );
 
-    $logger->info( sprintf(
-        "Oracle nightly cronjob: generating report for %s to %s",
-        $start_date->ymd, $end_date->ymd
-    ) );
+    my $window_text = $self->_window_text( $start_date, $end_date );
+    my $prefix      = "[$window_text] (cron)";
+
+    $logger->info("Oracle nightly cronjob: generating report for $window_text");
 
     my $report = $self->_generate_report( $start_date, $end_date, 1, 1 );
     unless ($report) {
@@ -216,7 +229,7 @@ sub cronjob_nightly {
         $self->_add_cron_run_log({
             status         => 'no_data',
             invoices_found => 0,
-            message        => sprintf( 'No invoices to submit for %s to %s', $start_date->ymd, $end_date->ymd ),
+            message        => "$prefix No invoices to submit",
         });
         return;
     }
@@ -234,7 +247,7 @@ sub cronjob_nightly {
                 status         => 'success',
                 invoices_found => $invoices_found,
                 filename       => $filename,
-                message        => "Uploaded $filename",
+                message        => "$prefix Uploaded $filename",
             });
             return 1;
         }
@@ -245,7 +258,7 @@ sub cronjob_nightly {
                 status         => 'error',
                 invoices_found => $invoices_found,
                 filename       => $filename,
-                message        => "Upload failed for $filename",
+                message        => "$prefix Upload failed for $filename",
             });
             return 0;
         }
@@ -262,7 +275,7 @@ sub cronjob_nightly {
             status         => 'success',
             invoices_found => $invoices_found,
             filename       => $filename,
-            message        => "Wrote local file $file_path",
+            message        => "$prefix Wrote local file $file_path",
         });
         return 1;
     }
@@ -323,7 +336,14 @@ sub report_step2 {
         $enddate = eval { dt_from_string($enddate) };
     }
 
-    my $results = $self->_generate_report( $startdate, $enddate );
+    # The TO input is exclusive: the report covers invoices closed on or
+    # after FROM and *before* TO. Shift the effective end back by one day
+    # so the SQL window lines up with the cron's day-granular
+    # [start, end] inclusive semantics.
+    my $effective_enddate =
+      $enddate ? $enddate->clone->subtract( days => 1 ) : undef;
+
+    my $results = $self->_generate_report( $startdate, $effective_enddate );
 
     my $templatefile;
     my $already_submitted_count = 0;
@@ -345,8 +365,9 @@ sub report_step2 {
 
     $template->param(
         date_ran                => dt_from_string(),
-        startdate               => dt_from_string($startdate),
-        enddate                 => dt_from_string($enddate),
+        startdate               => $startdate,
+        enddate                 => $enddate,
+        effective_enddate       => $effective_enddate,
         results                 => $results,
         filename                => $self->_generate_filename(),
         output_config           => $self->retrieve_data('output'),
@@ -920,6 +941,13 @@ sub _mark_invoices_submitted {
     for my $inv (@$invoice_numbers) {
         $sth->execute( $inv, $by // 'cron', $filename );
     }
+}
+
+sub _window_text {
+    my ( $self, $start, $end ) = @_;
+    return '' unless $start && $end;
+    return $start->ymd if $start->ymd eq $end->ymd;
+    return sprintf( '%s to %s', $start->ymd, $end->ymd );
 }
 
 sub _add_cron_run_log {
