@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-05-15
+
 ## [0.2.6] - 2026-05-13
 
 ## [0.2.5] - 2026-05-13
@@ -326,7 +328,8 @@ Starting with version 0.0.22, releases follow the modern auto-release workflow:
 3. KPZ files are created automatically for releases
 4. Release notes are generated from this CHANGELOG.md
 
-[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/openfifth/koha-plugin-rbkc-oracle/compare/v0.2.3...v0.2.4
