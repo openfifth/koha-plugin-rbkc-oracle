@@ -237,7 +237,17 @@ sub cronjob_nightly {
     my $invoices_found = scalar @{ $self->{_processed_invoices} || [] };
 
     if ( $output eq 'upload' ) {
-        $transport->connect;
+        eval { $transport->connect };
+        if ($@) {
+            $logger->error("Oracle nightly cronjob: connection failed for $filename: $@");
+            $self->_add_cron_run_log({
+                status         => 'error',
+                invoices_found => $invoices_found,
+                filename       => $filename,
+                message        => "$prefix Connection failed: $@",
+            });
+            return 0;
+        }
         open my $fh, '<', \$report;
         if ( $transport->upload_file( $fh, $filename ) ) {
             close $fh;
